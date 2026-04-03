@@ -1,32 +1,34 @@
-"use client";
-
-import { useState } from "react";
+import Link from "next/link";
 import { PageWrapper } from "@/components/layout/PageWrapper";
-import { Avatar } from "@/components/ui/Avatar";
-import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
-import { Card } from "@/components/ui/Card";
-import { Chip } from "@/components/ui/Chip";
-import { EmptyState } from "@/components/ui/EmptyState";
-import { Input } from "@/components/ui/Input";
-import { Modal } from "@/components/ui/Modal";
 import { ProgressBar } from "@/components/ui/ProgressBar";
-import { SkeletonBlock, SkeletonLine } from "@/components/ui/Skeleton";
-import { Spinner } from "@/components/ui/Spinner";
-import { Steps } from "@/components/ui/Steps";
-import { Toast } from "@/components/ui/Toast";
-import { Toggle } from "@/components/ui/Toggle";
 
-const steps = [
-  { id: "base", label: "Datos base" },
-  { id: "ia", label: "Analisis IA" },
-  { id: "publicar", label: "Publicar" },
+const stats = [
+  { label: "LEADS HOY", value: "23" },
+  { label: "BOT AUTO", value: "83%" },
+  { label: "VISITAS", value: "6" },
+  { label: "PROPS", value: "31" },
 ];
 
-export default function DashboardPage() {
-  const [open, setOpen] = useState(false);
-  const [chipActive, setChipActive] = useState(true);
+const leads = [
+  { id: "carlos-mendoza", initials: "CM", name: "Carlos Mendoza", meta: "Casa Coyoacan · hace 5 min", temp: "hot" },
+  { id: "ana-torres", initials: "AT", name: "Ana Torres", meta: "Depto Santa Fe · hace 2h", temp: "warm" },
+  { id: "roberto-silva", initials: "RS", name: "Roberto Silva", meta: "Terreno Huatulco · ayer", temp: "cold" },
+];
 
+const tempStyles = {
+  hot: "bg-error-light text-error",
+  warm: "bg-brand-light text-brand-dark",
+  cold: "bg-bg-secondary text-text-tertiary",
+};
+
+const tempLabel = {
+  hot: "caliente",
+  warm: "tibio",
+  cold: "frio",
+};
+
+export default function DashboardPage() {
   return (
     <PageWrapper
       title="Dashboard"
@@ -35,96 +37,89 @@ export default function DashboardPage() {
           <Button variant="brand-soft" ai>
             Generar resumen
           </Button>
-          <Button variant="primary">Nueva propiedad</Button>
+          <Link href="/propiedades/nueva" className="btn btn-primary">
+            <span>Nueva propiedad</span>
+          </Link>
         </>
       }
     >
-      <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
-        <Card title="Botones">
-          <div className="flex flex-wrap gap-2">
-            <Button variant="primary">Principal</Button>
-            <Button variant="brand-soft" ai>
-              IA
-            </Button>
-            <Button variant="ghost">Secundario</Button>
-            <Button variant="danger">Eliminar</Button>
-            <Button variant="whatsapp">WhatsApp</Button>
+      <div className="grid grid-cols-2 gap-3 xl:grid-cols-4">
+        {stats.map((item) => (
+          <div key={item.label} className="rounded-[12px] border-[0.5px] border-border-tertiary bg-bg-primary p-4">
+            <p className="text-[9px] font-medium tracking-[0.05em] text-text-tertiary">{item.label}</p>
+            <p className="mt-1 text-[28px] font-medium leading-none tracking-[-0.02em] text-brand">{item.value}</p>
           </div>
-        </Card>
+        ))}
+      </div>
 
-        <Card title="Inputs y estado IA" brand>
-          <div className="space-y-2">
-            <Input label="Titulo" placeholder="Casa en Coyoacan" />
-            <Input label="Descripcion" value="Generada por IA" readOnly aiFilled />
+      <div className="mt-3 rounded-[12px] border-[0.5px] border-brand-border bg-brand-light px-3 py-2 text-[11px] text-brand-text">
+        🔥 Carlos Mendoza es lead caliente · Score 87/100
+      </div>
+
+      <div className="mt-3 grid gap-3 xl:grid-cols-[1.35fr_1fr]">
+        <section className="rounded-[12px] border-[0.5px] border-border-tertiary bg-bg-primary">
+          <header className="flex items-center justify-between border-b-[0.5px] border-border-tertiary px-4 py-3">
+            <h2 className="text-[12px] font-medium">Leads recientes</h2>
+            <Link href="/leads" className="text-[10px] text-brand">
+              Ver todos →
+            </Link>
+          </header>
+
+          <div>
+            {leads.map((lead) => (
+              <Link
+                href={`/leads/${lead.id}`}
+                key={lead.id}
+                className="flex items-center gap-2 border-b-[0.5px] border-border-tertiary px-4 py-3 last:border-b-0"
+              >
+                <div className="avatar avatar-sm">{lead.initials}</div>
+                <div className="flex-1">
+                  <p className="text-[12px] font-medium text-text-primary">{lead.name}</p>
+                  <p className="text-[10px] text-text-tertiary">{lead.meta}</p>
+                </div>
+                <span className={`pill ${tempStyles[lead.temp as keyof typeof tempStyles]}`}>
+                  {tempLabel[lead.temp as keyof typeof tempLabel]}
+                </span>
+              </Link>
+            ))}
           </div>
-        </Card>
+        </section>
 
-        <Card title="Chips, badges y avatar">
-          <div className="flex items-center gap-2">
-            <Chip active={chipActive} onClick={() => setChipActive((prev) => !prev)}>
-              Filtro activo
-            </Chip>
-            <Badge ai>IA</Badge>
-            <Avatar initials="RG" size="md" />
-          </div>
-        </Card>
+        <section className="rounded-[12px] border-[0.5px] border-border-tertiary bg-bg-primary p-4">
+          <h2 className="text-[12px] font-medium">Actividad del chatbot</h2>
+          <p className="mt-1 text-[11px] text-text-tertiary">Sofia esta respondiendo el 83% de conversaciones sin ayuda.</p>
 
-        <Card title="Toggle y progreso">
-          <div className="space-y-3">
-            <Toggle defaultChecked label="Bot 24h" />
-            <ProgressBar value={68} />
-          </div>
-        </Card>
-
-        <Card title="Steps">
-          <Steps steps={steps} current="ia" />
-        </Card>
-
-        <Card title="Feedback">
-          <div className="space-y-2">
-            <Toast variant="success" title="Lead caliente detectado" description="Score 82/100" withProgress />
-            <div className="flex items-center gap-3">
-              <Spinner />
-              <SkeletonLine className="w-28" />
+          <div className="mt-4 space-y-3">
+            <div>
+              <div className="mb-1 flex items-center justify-between text-[10px] text-text-secondary">
+                <span>Autonomia del bot</span>
+                <span>83%</span>
+              </div>
+              <ProgressBar value={83} />
             </div>
-            <SkeletonBlock />
+
+            <div>
+              <div className="mb-1 flex items-center justify-between text-[10px] text-text-secondary">
+                <span>Tiempo medio de respuesta</span>
+                <span>1.8s</span>
+              </div>
+              <ProgressBar value={92} />
+            </div>
+
+            <div>
+              <div className="mb-1 flex items-center justify-between text-[10px] text-text-secondary">
+                <span>Leads calificados hoy</span>
+                <span>14/23</span>
+              </div>
+              <ProgressBar value={61} />
+            </div>
           </div>
-        </Card>
-      </div>
 
-      <div className="mt-3 rounded-[12px] border-[0.5px] border-border-tertiary bg-bg-primary">
-        <EmptyState
-          icon="📭"
-          title="Sin leads nuevos"
-          description="Cuando lleguen mensajes por WhatsApp apareceran aqui."
-          action={
-            <Button variant="brand-soft" ai>
-              Sugerir campana
-            </Button>
-          }
-          secondaryAction={<Button variant="ghost">Ver tutorial</Button>}
-        />
+          <Link href="/chatbot" className="mt-4 inline-block text-[10px] text-brand">
+            Ir al panel del chatbot →
+          </Link>
+        </section>
       </div>
-
-      <div className="mt-3">
-        <Button variant="ghost" onClick={() => setOpen(true)}>
-          Abrir modal de ejemplo
-        </Button>
-      </div>
-
-      <Modal open={open} title="Confirmar accion" onClose={() => setOpen(false)}>
-        <p className="text-[11px] leading-relaxed text-text-secondary">
-          Este modal usa bordes de 0.5px, radio 12px y tipografia del sistema para mantener consistencia.
-        </p>
-        <div className="mt-4 flex justify-end gap-2">
-          <Button variant="ghost" onClick={() => setOpen(false)}>
-            Cancelar
-          </Button>
-          <Button variant="primary" onClick={() => setOpen(false)}>
-            Aceptar
-          </Button>
-        </div>
-      </Modal>
     </PageWrapper>
   );
 }

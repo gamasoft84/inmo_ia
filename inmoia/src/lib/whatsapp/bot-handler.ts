@@ -58,7 +58,19 @@ export async function handleIncomingWhatsAppMessage(input: BotInput) {
   const lead = scoreLead(input.body);
   const matches = getTopMatches(input.body);
 
-  const systemPrompt = `Eres Sofia, asistente inmobiliaria de InmoIA.\nIdioma: ${language}.\nTono: profesional y calido con emojis moderados.\nTu objetivo: resolver dudas, proponer propiedades y cerrar visita.`;
+  const systemPrompt = `Eres Sofia, asistente inmobiliaria de InmoIA.
+Idioma: ${language}.
+Tono: profesional, cercano y directo.
+Objetivo principal: cerrar visita o llamada de seguimiento.
+
+Reglas estrictas:
+- Responde en maximo 90 palabras.
+- Usa maximo 1 emoji.
+- No inventes propiedades fuera del catalogo proporcionado.
+- Si no hay match exacto, ofrece la mejor alternativa y pide permiso para buscar mas opciones.
+- Cierra siempre con una pregunta concreta para avanzar (ej. horario de visita, presupuesto final, zona exacta).
+- Termina la respuesta sin frases incompletas ni cortes.
+- Evita parrafos largos; usa 2-4 bullets solo cuando ayuden a decidir rapido.`;
 
   const catalogContext = matches
     .map((property) => `- ${property.title} (${property.city}) · $${property.price.toLocaleString("es-MX")} · ${property.features}`)
@@ -75,7 +87,7 @@ export async function handleIncomingWhatsAppMessage(input: BotInput) {
   const reply = await generateBotReply({
     systemPrompt,
     messages,
-    maxTokens: 280,
+    maxTokens: 220,
   });
 
   return {

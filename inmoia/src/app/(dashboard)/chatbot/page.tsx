@@ -1,51 +1,123 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { PageWrapper } from "@/components/layout/PageWrapper";
 import { Button } from "@/components/ui/Button";
+import { createClient } from "@/lib/supabase/client";
 
 type Conversation = {
-  id: string;
+  leadId: string;
   name: string;
   avatar: string;
   preview: string;
   time: string;
   unread: boolean;
-  status: "bot" | "agent";
 };
 
-const conversations: Conversation[] = [
-  { id: "carlos", name: "Carlos Mendoza", avatar: "C", preview: "¿Cuando puedo ver la casa?", time: "5 min", unread: true, status: "bot" },
-  { id: "ana", name: "Ana Torres", avatar: "A", preview: "Me interesa el depto de Santa Fe", time: "2h", unread: true, status: "bot" },
-  { id: "roberto", name: "Roberto Silva", avatar: "R", preview: "¿Tiene escrituras el terreno?", time: "ayer", unread: false, status: "agent" },
-];
-
-const messagesByLead: Record<string, Array<{ role: "bot" | "client"; text: string; time: string }>> = {
-  carlos: [
-    { role: "bot", text: "¡Hola! Soy Sofia 🏡 ¿En que puedo ayudarte?", time: "10:32" },
-    { role: "client", text: "Hola, me interesa la Casa Coyoacan", time: "10:33" },
-    { role: "bot", text: "Con gusto. 210m², 3 rec, jardin privado y $5,800,000. ¿Agendamos visita?", time: "10:33" },
-    { role: "client", text: "Si, ¿cuando pueden? Mi presupuesto es hasta 6M", time: "10:34" },
-    { role: "bot", text: "Perfecto. Tengo mañana 10am o jueves 3pm. ¿Cual te acomoda?", time: "10:34" },
-  ],
-  ana: [
-    { role: "bot", text: "Hola Ana, te comparto opciones en Santa Fe.", time: "09:12" },
-    { role: "client", text: "Busco 2 recamaras y amenidades", time: "09:13" },
-  ],
-  roberto: [
-    { role: "client", text: "¿Tiene escrituras el terreno?", time: "ayer" },
-    { role: "bot", text: "Si, toda la documentacion esta en regla.", time: "ayer" },
-  ],
+type ChatMessage = {
+  id: string;
+  role: "bot" | "client" | "agent";
+  content: string;
+  created_at: string;
 };
+
+function formatMessageTime(value: string) {
+  const date = new Date(value);
+  return date.toLocaleTimeString("es-MX", {
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+}
 
 export default function ChatbotPage() {
-  const [activeLeadId, setActiveLeadId] = useState("carlos");
+  const [conversations, setConversations] = useState<Conversation[]>([]);
+  const [activeLeadId, setActiveLeadId] = useState<string>("");
+  const [thread, setThread] = useState<ChatMessage[]>([]);
+  const [draft, setDraft] = useState("");
+  const [loadingList, setLoadingList] = useState(true);
+  const [loadingThread, setLoadingThread] = useState(false);
+  const [sending, setSending] = useState(false);
   const [agentControl, setAgentControl] = useState(false);
 
+  async function loadSummary() {
+    setLoadingList(true);
+    const res = await fetch("/api/chatbot/conversations", { cache: "no-store" });
+    const json = await res.json();
+    const list = (json?.data ?? []) as Conversation[];
+    setConversations(list);
+    setActiveLeadId((prev) => prev || list[0]?.leadId || "");
+    setLoadingList(false);
+  }
+
+  async function loadThread(leadId: string) {
+    if (!leadId) {
+      setThread([]);
+      return;
+    }
+
+    setLoadingThread(true);
+    const res = await fetch(`/api/chatbot/conversations?leadId=${leadId}`, {
+      cache: "no-store",
+    });
+    const json = await res.json();
+    setThread((json?.data ?? []) as ChatMessage[]);
+    setLoadingThread(false);
+  }
+
+  useEffect(() => {
+    loadSummary();
+  }, []);
+
+  useEffect(() => {
+    loadThread(activeLeadId);
+  }, [activeLeadId]);
+
+  useEffect(() => {
+    const supabase = createClient();
+
+    const channel = supabase
+      .channel("chatbot-conversations")
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "conversations",
+        },
+        () => {
+          loadSummary();
+          if (activeLeadId) loadThread(activeLeadId);
+        },
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [activeLeadId]);
+
+  async function sendMessage() {
+    if (!draft.trim() || !activeLeadId || !agentControl) return;
+
+    setSending(true);
+    await fetch("/api/chatbot/conversations", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        leadId: activeLeadId,
+        content: draft.trim(),
+      }),
+    });
+    setDraft("");
+    await loadThread(activeLeadId);
+    await loadSummary();
+    setSending(false);
+  }
+
   const activeConversation = useMemo(
-    () => conversations.find((c) => c.id === activeLeadId) ?? conversations[0],
-    [activeLeadId],
+    () => conversations.find((c) => c.leadId === activeLeadId) ?? conversations[0],
+    [activeLeadId, conversations],
   );
 
   return (
@@ -68,12 +140,16 @@ export default function ChatbotPage() {
           </div>
 
           <div>
-            {conversations.map((conversation) => (
+            {loadingList ? (
+              <div className="p-3 text-[11px] text-text-tertiary">Cargando conversaciones...</div>
+            ) : conversations.length === 0 ? (
+              <div className="p-3 text-[11px] text-text-tertiary">Sin conversaciones aún.</div>
+            ) : conversations.map((conversation) => (
               <button
-                key={conversation.id}
+                key={conversation.leadId}
                 type="button"
-                onClick={() => setActiveLeadId(conversation.id)}
-                className={`flex w-full items-start gap-2 border-b-[0.5px] border-border-tertiary px-3 py-3 text-left last:border-b-0 ${activeLeadId === conversation.id ? "bg-brand-light/30" : "bg-bg-primary"}`}
+                onClick={() => setActiveLeadId(conversation.leadId)}
+                className={`flex w-full items-start gap-2 border-b-[0.5px] border-border-tertiary px-3 py-3 text-left last:border-b-0 ${activeLeadId === conversation.leadId ? "bg-brand-light/30" : "bg-bg-primary"}`}
               >
                 <div className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full bg-wa-green text-[10px] font-semibold text-white">
                   {conversation.avatar}
@@ -96,28 +172,41 @@ export default function ChatbotPage() {
         <section className="overflow-hidden rounded-[12px] border-[0.5px] border-border-tertiary">
           <header className="flex items-center gap-2 bg-wa-dark px-3 py-2 text-white">
             <div className="flex h-6 w-6 items-center justify-center rounded-full bg-wa-green text-[10px] font-semibold">
-              {activeConversation.avatar}
+              {activeConversation?.avatar ?? "?"}
             </div>
             <div>
-              <p className="text-[11px] font-medium">{activeConversation.name}</p>
+              <p className="text-[11px] font-medium">{activeConversation?.name ?? "Sin lead"}</p>
               <p className="text-[9px] text-white/60">{agentControl ? "Agente en control" : "Sofia atiende automaticamente"}</p>
             </div>
 
             <button
               type="button"
               onClick={() => setAgentControl((prev) => !prev)}
-              className="ml-auto rounded-full bg-brand px-3 py-1 text-[8px] font-medium"
+              disabled={!activeConversation}
+              className="ml-auto rounded-full bg-brand px-3 py-1 text-[8px] font-medium disabled:opacity-50"
             >
               {agentControl ? "Regresar a Sofia" : "Tomar control"}
             </button>
           </header>
 
           <div className="space-y-2 bg-wa-bg p-3">
-            {messagesByLead[activeConversation.id].map((message, index) => (
-              <div key={`${activeConversation.id}-${index}`} className={`flex ${message.role === "client" ? "justify-end" : "justify-start"}`}>
-                <div className={`max-w-[82%] rounded-[10px] px-3 py-2 text-[11px] leading-relaxed ${message.role === "client" ? "bg-wa-bubble text-[#1a1a1a]" : "bg-white text-[#1a1a1a]"}`}>
-                  {message.text}
-                  <div className="mt-1 text-[8px] text-text-tertiary">{message.time}</div>
+            {loadingThread ? (
+              <div className="text-[11px] text-text-tertiary">Cargando conversación...</div>
+            ) : thread.length === 0 ? (
+              <div className="text-[11px] text-text-tertiary">Aún no hay mensajes en este lead.</div>
+            ) : thread.map((message) => (
+              <div key={message.id} className={`flex ${message.role === "client" ? "justify-end" : "justify-start"}`}>
+                <div
+                  className={`max-w-[82%] rounded-[10px] px-3 py-2 text-[11px] leading-relaxed ${
+                    message.role === "client"
+                      ? "bg-wa-bubble text-[#1a1a1a]"
+                      : message.role === "agent"
+                        ? "bg-info-light text-[#1a1a1a]"
+                        : "bg-white text-[#1a1a1a]"
+                  }`}
+                >
+                  {message.content}
+                  <div className="mt-1 text-[8px] text-text-tertiary">{formatMessageTime(message.created_at)}</div>
                 </div>
               </div>
             ))}
@@ -126,10 +215,23 @@ export default function ChatbotPage() {
           <div className="flex items-center gap-2 bg-bg-secondary px-3 py-2">
             <input
               className="input-base"
+              value={draft}
+              onChange={(e) => setDraft(e.target.value)}
               placeholder={agentControl ? "Escribe como agente..." : "Sofia respondera automaticamente"}
               disabled={!agentControl}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  e.preventDefault();
+                  sendMessage();
+                }
+              }}
             />
-            <button className="flex h-7 w-7 items-center justify-center rounded-full bg-wa-dark text-[12px] text-white">
+            <button
+              type="button"
+              onClick={sendMessage}
+              disabled={!agentControl || sending}
+              className="flex h-7 w-7 items-center justify-center rounded-full bg-wa-dark text-[12px] text-white disabled:opacity-50"
+            >
               ➤
             </button>
           </div>

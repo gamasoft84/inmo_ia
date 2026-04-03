@@ -35,18 +35,23 @@ export async function generateBotReply(input: GenerateReplyInput): Promise<strin
     return fallbackReply(lastUserMessage);
   }
 
-  const client = new Anthropic({ apiKey });
+  try {
+    const client = new Anthropic({ apiKey });
 
-  const result = await client.messages.create({
-    model: MODEL,
-    max_tokens: input.maxTokens ?? 350,
-    system: input.systemPrompt,
-    messages: input.messages.map((message) => ({
-      role: message.role,
-      content: message.content,
-    })),
-  });
+    const result = await client.messages.create({
+      model: MODEL,
+      max_tokens: input.maxTokens ?? 350,
+      system: input.systemPrompt,
+      messages: input.messages.map((message) => ({
+        role: message.role,
+        content: message.content,
+      })),
+    });
 
-  const textPart = result.content.find((part) => part.type === "text");
-  return textPart?.text?.trim() || fallbackReply(lastUserMessage);
+    const textPart = result.content.find((part) => part.type === "text");
+    return textPart?.text?.trim() || fallbackReply(lastUserMessage);
+  } catch {
+    // Keep webhook resilient even when Anthropic key/model is misconfigured.
+    return fallbackReply(lastUserMessage);
+  }
 }

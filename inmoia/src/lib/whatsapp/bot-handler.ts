@@ -1,19 +1,15 @@
-import { createMockEmbedding, cosineSimilarity } from "@/lib/ai/embeddings";
 import { generateBotReply } from "@/lib/ai/claude";
+import { findTopPropertyMatches } from "@/lib/whatsapp/semantic-properties";
 
 type BotInput = {
   from: string;
+  to?: string;
   body: string;
+  agencyId?: string;
   history?: Array<{ role: "user" | "assistant"; content: string }>;
 };
 
 type Temp = "hot" | "warm" | "cold";
-
-const CATALOG = [
-  { id: "casa-coyoacan", title: "Casa Coyoacan", price: 5800000, city: "CDMX", features: "3 recamaras, jardin, 210m2" },
-  { id: "depto-santa-fe", title: "Depto Santa Fe", price: 4450000, city: "CDMX", features: "2 recamaras, amenidades" },
-  { id: "terreno-huatulco", title: "Terreno Huatulco", price: 2800000, city: "Huatulco", features: "950m2, cerca de playa" },
-];
 
 function detectLanguage(text: string): "es" | "en" {
   const lower = text.toLowerCase();
@@ -39,24 +35,17 @@ function scoreLead(text: string): { score: number; temp: Temp } {
   return { score, temp: "cold" };
 }
 
-function getTopMatches(query: string) {
-  const queryEmbedding = createMockEmbedding(query);
-
-  return CATALOG.map((property) => {
-    const propertyEmbedding = createMockEmbedding(`${property.title} ${property.city} ${property.features}`);
-    return {
-      ...property,
-      similarity: cosineSimilarity(queryEmbedding, propertyEmbedding),
-    };
-  })
-    .sort((a, b) => b.similarity - a.similarity)
-    .slice(0, 2);
-}
-
 export async function handleIncomingWhatsAppMessage(input: BotInput) {
   const language = detectLanguage(input.body);
   const lead = scoreLead(input.body);
-  const matches = getTopMatches(input.body);
+  const semantic = input.agencyId
+    ? await findTopPropertyMatches({
+      agencyId: input.agencyId,
+      query: input.body,
+      limit: 2,
+    })
+    : { matches: [], source: "fallback" as const };
+  const matches = semantic.matches;
 
   const systemPrompt = `Eres Sofia, asistente inmobiliaria de InmoIA.
 Idioma: ${language}.
@@ -72,9 +61,11 @@ Reglas estrictas:
 - Termina la respuesta sin frases incompletas ni cortes.
 - Evita parrafos largos; usa 2-4 bullets solo cuando ayuden a decidir rapido.`;
 
-  const catalogContext = matches
-    .map((property) => `- ${property.title} (${property.city}) · $${property.price.toLocaleString("es-MX")} · ${property.features}`)
-    .join("\n");
+  const catalogContext = matches.length > 0
+    ? matches
+      .map((property) => `- ${property.title} (${property.city}) · ${property.features}`)
+      .join("\n")
+    : "- Sin coincidencias semanticas disponibles por ahora.";
 
   const messages = [
     ...(input.history ?? []),
@@ -96,5 +87,6 @@ Reglas estrictas:
     leadScore: lead.score,
     leadTemp: lead.temp,
     matches,
+    semanticSource: semantic.source,
   };
 }

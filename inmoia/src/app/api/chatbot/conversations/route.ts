@@ -45,18 +45,22 @@ function relativeTime(dateIso: string) {
   return "ayer";
 }
 
-async function resolveAgencyId() {
-  const supabase = createAdminClient();
-  if (!supabase) return null;
-
-  const agency = await supabase.from("agencies").select("id").limit(1).maybeSingle();
-  if (agency.error || !agency.data?.id) return null;
-
-  return agency.data.id;
+function extractAgencyId(req: NextRequest) {
+  const byQuery = req.nextUrl.searchParams.get("agencyId")?.trim();
+  const byHeader = req.headers.get("x-agency-id")?.trim();
+  return byQuery || byHeader || null;
 }
 
 export async function GET(req: NextRequest) {
   const leadId = req.nextUrl.searchParams.get("leadId");
+  const agencyId = extractAgencyId(req);
+  if (!agencyId) {
+    return NextResponse.json(
+      { ok: false, error: "agencyId is required (query param agencyId or header x-agency-id)" },
+      { status: 400 },
+    );
+  }
+
   const supabase = createAdminClient();
 
   if (!supabase) {
@@ -64,11 +68,6 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ ok: true, mode: "thread", data: MOCK_THREAD, mock: true });
     }
     return NextResponse.json({ ok: true, mode: "summary", data: MOCK_SUMMARIES, mock: true });
-  }
-
-  const agencyId = await resolveAgencyId();
-  if (!agencyId) {
-    return NextResponse.json({ ok: true, data: [], mock: false });
   }
 
   if (leadId) {
@@ -150,10 +149,15 @@ export async function POST(req: NextRequest) {
   const payload = await req.json().catch(() => null);
   const leadId = String(payload?.leadId ?? "").trim();
   const content = String(payload?.content ?? "").trim();
+  const agencyId = (
+    req.nextUrl.searchParams.get("agencyId")
+    || req.headers.get("x-agency-id")
+    || payload?.agencyId
+  )?.toString().trim();
 
-  if (!leadId || !content) {
+  if (!agencyId || !leadId || !content) {
     return NextResponse.json(
-      { ok: false, error: "leadId and content are required" },
+      { ok: false, error: "agencyId, leadId and content are required" },
       { status: 400 },
     );
   }
@@ -167,6 +171,7 @@ export async function POST(req: NextRequest) {
     .from("leads")
     .select("id, agency_id")
     .eq("id", leadId)
+    .eq("agency_id", agencyId)
     .maybeSingle();
 
   if (lead.error || !lead.data?.agency_id) {
@@ -175,7 +180,7 @@ export async function POST(req: NextRequest) {
 
   const inserted = await supabase.from("conversations").insert({
     lead_id: leadId,
-    agency_id: lead.data.agency_id,
+    agency_id: agencyId,
     role: "agent",
     content,
     is_read: true,

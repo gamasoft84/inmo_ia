@@ -28,3 +28,7 @@ export function cosineSimilarity(a: number[], b: number[]): number {
   if (magA === 0 || magB === 0) return 0;
   return dot / (Math.sqrt(magA) * Math.sqrt(magB));
 }
+
+export function toPgVectorLiteral(vector: number[]) {
+  return `[${vector.map((value) => Number(value).toFixed(8)).join(",")}]`;
+}

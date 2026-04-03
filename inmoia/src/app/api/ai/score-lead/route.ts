@@ -4,6 +4,7 @@ import { handleIncomingWhatsAppMessage } from "@/lib/whatsapp/bot-handler";
 export async function POST(req: NextRequest) {
   const payload = await req.json().catch(() => null);
   const message = String(payload?.message ?? "").trim();
+  const agencyId = String(payload?.agencyId ?? "").trim();
 
   if (!message) {
     return NextResponse.json(
@@ -15,6 +16,7 @@ export async function POST(req: NextRequest) {
   const result = await handleIncomingWhatsAppMessage({
     from: "api-test",
     body: message,
+    agencyId: agencyId || undefined,
   });
 
   return NextResponse.json({
@@ -22,6 +24,7 @@ export async function POST(req: NextRequest) {
     score: result.leadScore,
     temperature: result.leadTemp,
     language: result.language,
+    semanticSource: result.semanticSource,
     suggestedProperties: result.matches,
     suggestedReply: result.reply,
   });

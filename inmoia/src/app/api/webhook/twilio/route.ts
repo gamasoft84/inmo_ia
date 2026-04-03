@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { handleIncomingWhatsAppMessage } from "@/lib/whatsapp/bot-handler";
 import { validateTwilioWebhookSignature } from "@/lib/whatsapp/twilio";
 import { persistWhatsAppConversation } from "@/lib/whatsapp/persistence";
+import { createAdminClient } from "@/lib/supabase/admin";
 
 function getPublicWebhookUrl(req: NextRequest) {
   const protocol = req.headers.get("x-forwarded-proto") ?? "https";
@@ -20,6 +21,27 @@ function escapeXml(value: string) {
 
 function twimlMessage(message: string) {
   return `<?xml version="1.0" encoding="UTF-8"?><Response><Message>${escapeXml(message)}</Message></Response>`;
+}
+
+function normalizeWhatsAppNumber(value: string) {
+  return value.replace(/^whatsapp:/i, "").trim();
+}
+
+async function resolveAgencyIdByIncomingNumber(to: string) {
+  const toPhone = normalizeWhatsAppNumber(to);
+  if (!toPhone) return null;
+
+  const supabase = createAdminClient();
+  if (!supabase) return null;
+
+  const agency = await supabase
+    .from("agencies")
+    .select("id")
+    .eq("whatsapp_number", toPhone)
+    .maybeSingle();
+
+  if (agency.error || !agency.data?.id) return null;
+  return agency.data.id;
 }
 
 export async function POST(req: NextRequest) {
@@ -56,7 +78,9 @@ export async function POST(req: NextRequest) {
 
     const result = await handleIncomingWhatsAppMessage({
       from,
+      to,
       body: text,
+      agencyId: await resolveAgencyIdByIncomingNumber(to),
     });
 
     const persisted = await persistWhatsAppConversation({

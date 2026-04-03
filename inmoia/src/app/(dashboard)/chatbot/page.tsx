@@ -5,6 +5,7 @@ import { useEffect, useMemo, useState } from "react";
 import { PageWrapper } from "@/components/layout/PageWrapper";
 import { Button } from "@/components/ui/Button";
 import { createClient } from "@/lib/supabase/client";
+import { getClientAgencyId } from "@/lib/agency/client-agency";
 
 type Conversation = {
   leadId: string;
@@ -39,10 +40,22 @@ export default function ChatbotPage() {
   const [loadingThread, setLoadingThread] = useState(false);
   const [sending, setSending] = useState(false);
   const [agentControl, setAgentControl] = useState(false);
+  const [feedback, setFeedback] = useState("");
 
   async function loadSummary() {
     setLoadingList(true);
-    const res = await fetch("/api/chatbot/conversations", { cache: "no-store" });
+    const agencyId = getClientAgencyId();
+    if (!agencyId) {
+      setFeedback("Falta agencyId. Abre esta vista con ?agencyId=<uuid>.");
+      setConversations([]);
+      setLoadingList(false);
+      return;
+    }
+
+    const res = await fetch(`/api/chatbot/conversations?agencyId=${encodeURIComponent(agencyId)}`, {
+      cache: "no-store",
+      headers: { "x-agency-id": agencyId },
+    });
     const json = await res.json();
     const list = (json?.data ?? []) as Conversation[];
     setConversations(list);
@@ -56,9 +69,17 @@ export default function ChatbotPage() {
       return;
     }
 
+    const agencyId = getClientAgencyId();
+    if (!agencyId) {
+      setFeedback("Falta agencyId. No se puede cargar el hilo.");
+      setLoadingThread(false);
+      return;
+    }
+
     setLoadingThread(true);
-    const res = await fetch(`/api/chatbot/conversations?leadId=${leadId}`, {
+    const res = await fetch(`/api/chatbot/conversations?agencyId=${encodeURIComponent(agencyId)}&leadId=${encodeURIComponent(leadId)}`, {
       cache: "no-store",
+      headers: { "x-agency-id": agencyId },
     });
     const json = await res.json();
     setThread((json?.data ?? []) as ChatMessage[]);
@@ -100,11 +121,21 @@ export default function ChatbotPage() {
   async function sendMessage() {
     if (!draft.trim() || !activeLeadId || !agentControl) return;
 
+    const agencyId = getClientAgencyId();
+    if (!agencyId) {
+      setFeedback("Falta agencyId. No se puede enviar mensaje.");
+      return;
+    }
+
     setSending(true);
-    await fetch("/api/chatbot/conversations", {
+    await fetch(`/api/chatbot/conversations?agencyId=${encodeURIComponent(agencyId)}`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: {
+        "Content-Type": "application/json",
+        "x-agency-id": agencyId,
+      },
       body: JSON.stringify({
+        agencyId,
         leadId: activeLeadId,
         content: draft.trim(),
       }),
@@ -142,6 +173,8 @@ export default function ChatbotPage() {
           <div>
             {loadingList ? (
               <div className="p-3 text-[11px] text-text-tertiary">Cargando conversaciones...</div>
+            ) : feedback ? (
+              <div className="p-3 text-[11px] text-text-tertiary">{feedback}</div>
             ) : conversations.length === 0 ? (
               <div className="p-3 text-[11px] text-text-tertiary">Sin conversaciones aún.</div>
             ) : conversations.map((conversation) => (

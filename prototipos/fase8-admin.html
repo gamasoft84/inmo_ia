@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>InmoIA · Fase 8 — Admin y Pagos</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #0f0f1a; color: #fff; padding: 32px 20px; }
+  .nav { display: flex; align-items: center; gap: 12px; margin-bottom: 32px; }
+  .back { color: #BA7517; text-decoration: none; font-size: 12px; }
+  .phase-title { font-size: 22px; font-weight: 500; }
+  .phase-sub { font-size: 13px; color: rgba(255,255,255,0.4); margin-top: 4px; margin-bottom: 32px; }
+  .screens { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 20px; }
+  .screen-block { background: rgba(255,255,255,0.03); border: 0.5px solid rgba(255,255,255,0.08); border-radius: 12px; overflow: hidden; }
+  .screen-header { padding: 12px 16px; border-bottom: 0.5px solid rgba(255,255,255,0.06); display: flex; align-items: center; justify-content: space-between; }
+  .screen-num { font-size: 10px; color: #BA7517; font-weight: 600; letter-spacing: 0.05em; }
+  .screen-name { font-size: 12px; font-weight: 500; }
+  .screen-route { font-size: 10px; color: rgba(255,255,255,0.3); font-family: monospace; }
+  .screen-preview { padding: 14px; }
+  .screen-notes { padding: 10px 14px; background: rgba(186,117,23,0.06); border-top: 0.5px solid rgba(186,117,23,0.15); font-size: 10px; color: rgba(255,255,255,0.4); line-height: 1.6; }
+  .screen-notes strong { color: #BA7517; }
+
+  /* ADMIN PANEL */
+  .admin { background: #12121E; border-radius: 8px; overflow: hidden; }
+  .admin-top { background: rgba(255,255,255,0.04); padding: 8px 12px; display: flex; align-items: center; gap: 8px; border-bottom: 0.5px solid rgba(255,255,255,0.06); }
+  .admin-badge { background: #A32D2D; color: #fff; font-size: 8px; font-weight: 700; padding: 2px 6px; border-radius: 4px; letter-spacing: 0.06em; }
+  .admin-stats { display: grid; grid-template-columns: repeat(4,1fr); gap: 6px; padding: 10px 12px; }
+  .admin-stat { background: rgba(255,255,255,0.04); border: 0.5px solid rgba(255,255,255,0.07); border-radius: 6px; padding: 8px; }
+  .admin-stat-val { font-size: 18px; font-weight: 500; color: #BA7517; }
+  .admin-stat-label { font-size: 7px; color: rgba(255,255,255,0.3); letter-spacing: 0.06em; }
+  .admin-row { display: flex; align-items: center; gap: 8px; padding: 7px 12px; border-bottom: 0.5px solid rgba(255,255,255,0.05); font-size: 11px; }
+  .admin-status { font-size: 8px; font-weight: 600; padding: 1px 6px; border-radius: 10px; }
+  .admin-status.active { background: #EAF3DE; color: #3B6D11; }
+  .admin-status.trial { background: #E6F1FB; color: #185FA5; }
+  .admin-status.suspended { background: #FCEBEB; color: #A32D2D; }
+
+  /* PLANES / CONVERSIÓN */
+  .planes { background: #fff; border-radius: 8px; overflow: hidden; }
+  .planes-countdown { background: #0f0f1a; padding: 8px 12px; text-align: center; }
+  .planes-cd-label { font-size: 9px; color: rgba(255,255,255,0.4); margin-bottom: 4px; }
+  .planes-cd-time { font-size: 20px; font-weight: 500; color: #BA7517; font-variant-numeric: tabular-nums; }
+  .planes-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 6px; padding: 10px; }
+  .plan-card { border: 1.5px solid #D4D0C8; border-radius: 8px; padding: 8px; text-align: center; cursor: pointer; transition: all 0.15s; }
+  .plan-card.featured { border-color: #BA7517; background: #FAEEDA; }
+  .plan-name { font-size: 10px; font-weight: 600; color: #1A1A2E; margin-bottom: 2px; }
+  .plan-price { font-size: 16px; font-weight: 500; color: #854F0B; }
+  .plan-period { font-size: 8px; color: #9090A8; }
+  .plan-feature { font-size: 8px; color: #4A4A6A; margin-top: 4px; }
+  .plan-badge { font-size: 7px; background: #BA7517; color: #fff; border-radius: 10px; padding: 1px 5px; margin-bottom: 3px; display: inline-block; }
+
+  /* COBROS */
+  .cobros { background: #fff; border-radius: 8px; overflow: hidden; }
+  .cobros-sum { display: grid; grid-template-columns: repeat(3,1fr); gap: 0; border-bottom: 0.5px solid #EBEBEB; }
+  .cobros-sum-item { padding: 10px; border-right: 0.5px solid #EBEBEB; text-align: center; }
+  .cobros-sum-item:last-child { border-right: none; }
+  .cobros-val { font-size: 16px; font-weight: 500; color: #BA7517; }
+  .cobros-label { font-size: 8px; color: #9090A8; }
+  .cobros-row { display: flex; gap: 8px; align-items: center; padding: 7px 12px; border-bottom: 0.5px solid #EBEBEB; font-size: 10px; }
+  .cobros-plan { font-size: 9px; padding: 1px 7px; border-radius: 10px; background: #FAEEDA; color: #854F0B; border: 0.5px solid #FAC775; }
+  .cobros-amount { font-size: 11px; font-weight: 500; color: #1A1A2E; margin-left: auto; }
+  .cobros-status-ok { width: 6px; height: 6px; border-radius: 50%; background: #3B6D11; flex-shrink: 0; }
+  .cobros-status-fail { width: 6px; height: 6px; border-radius: 50%; background: #A32D2D; flex-shrink: 0; }
+
+  /* DETALLE AGENCIA */
+  .agencia { background: #fff; border-radius: 8px; overflow: hidden; }
+  .agencia-hero { background: #F7F6F3; padding: 10px 12px; display: flex; gap: 8px; align-items: center; border-bottom: 0.5px solid #EBEBEB; }
+  .agencia-icon { width: 36px; height: 36px; border-radius: 10px; background: #FAEEDA; display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0; border: 1.5px solid #FAC775; }
+  .agencia-name { font-size: 13px; font-weight: 500; color: #1A1A2E; }
+  .agencia-meta { font-size: 9px; color: #9090A8; }
+  .agencia-tabs { display: flex; border-bottom: 0.5px solid #EBEBEB; padding: 0 10px; overflow-x: auto; }
+  .agencia-tab { padding: 5px 8px; font-size: 9px; color: #9090A8; border-bottom: 2px solid transparent; white-space: nowrap; }
+  .agencia-tab.active { color: #854F0B; border-bottom-color: #BA7517; font-weight: 500; }
+  .agencia-body { padding: 8px 12px; }
+  .agencia-row { display: flex; justify-content: space-between; font-size: 10px; padding: 5px 0; border-bottom: 0.5px solid #EBEBEB; }
+  .agencia-key { color: #9090A8; }
+  .agencia-val { font-weight: 500; color: #1A1A2E; }
+
+  /* SOPORTE */
+  .soporte { background: #fff; border-radius: 8px; overflow: hidden; }
+  .soporte-row { display: flex; gap: 8px; align-items: flex-start; padding: 8px 12px; border-bottom: 0.5px solid #EBEBEB; cursor: pointer; }
+  .soporte-row:hover { background: #F7F6F3; }
+  .soporte-priority { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; margin-top: 4px; }
+  .soporte-title { font-size: 10px; font-weight: 500; color: #1A1A2E; margin-bottom: 2px; }
+  .soporte-meta { font-size: 9px; color: #9090A8; }
+  .soporte-badge { font-size: 8px; font-weight: 600; padding: 1px 5px; border-radius: 10px; margin-left: auto; white-space: nowrap; }
+</style>
+</head>
+<body>
+
+<div class="nav">
+  <a href="INDEX.html" class="back">← Índice</a>
+  <span style="color:rgba(255,255,255,0.2)">|</span>
+  <span style="font-size:11px;color:rgba(255,255,255,0.3)">FASE 8</span>
+</div>
+
+<div class="phase-title">👑 Admin y Pagos</div>
+<div class="phase-sub">Panel Super Admin (solo tú) + Stripe + Conversión trial → pago</div>
+
+<div class="screens">
+
+  <!-- ADMIN PANEL -->
+  <div class="screen-block">
+    <div class="screen-header">
+      <div><div class="screen-num">F8-01</div><div class="screen-name">Panel Super Admin</div></div>
+      <div class="screen-route">/admin</div>
+    </div>
+    <div class="screen-preview">
+      <div class="admin">
+        <div class="admin-top">
+          <div class="admin-badge">SUPER ADMIN</div>
+          <span style="font-size:10px;color:rgba(255,255,255,0.4);margin-left:4px">Gamasoft IA · Solo tú</span>
+        </div>
+        <div class="admin-stats">
+          <div class="admin-stat"><div class="admin-stat-val">$4,891</div><div class="admin-stat-label">MRR USD</div></div>
+          <div class="admin-stat"><div class="admin-stat-val">23</div><div class="admin-stat-label">AGENCIAS</div></div>
+          <div class="admin-stat"><div class="admin-stat-val">2.1%</div><div class="admin-stat-label">CHURN</div></div>
+          <div class="admin-stat"><div class="admin-stat-val">$58k</div><div class="admin-stat-label">ARR USD</div></div>
+        </div>
+        <div class="admin-row">
+          <span style="color:rgba(255,255,255,0.6)">Agencia Aguilar</span>
+          <div class="admin-status active">Activa</div>
+          <span style="margin-left:auto;font-size:9px;color:rgba(255,255,255,0.3)">Plan Pro · $299/mes</span>
+        </div>
+        <div class="admin-row">
+          <span style="color:rgba(255,255,255,0.6)">Inmobiliaria Flores</span>
+          <div class="admin-status trial">Trial día 8</div>
+          <span style="margin-left:auto;font-size:9px;color:rgba(255,255,255,0.3)">14 días gratis</span>
+        </div>
+        <div class="admin-row">
+          <span style="color:rgba(255,255,255,0.6)">Casas del Sur</span>
+          <div class="admin-status suspended">Suspendida</div>
+          <span style="margin-left:auto;font-size:9px;color:#A32D2D">Pago fallido · 3 días</span>
+        </div>
+      </div>
+    </div>
+    <div class="screen-notes">
+      <strong>Solo accede:</strong> SUPER_ADMIN_EMAIL del .env.local<br>
+      <strong>6 secciones:</strong> Resumen · Agencias · Cobros · Soporte · Ajustes · Detalle de agencia
+    </div>
+  </div>
+
+  <!-- CONVERSIÓN TRIAL -->
+  <div class="screen-block">
+    <div class="screen-header">
+      <div><div class="screen-num">F8-02</div><div class="screen-name">Conversión Trial → Pago</div></div>
+      <div class="screen-route">Modal día 14</div>
+    </div>
+    <div class="screen-preview">
+      <div class="planes">
+        <div class="planes-countdown">
+          <div class="planes-cd-label">⏰ TU TRIAL TERMINA EN</div>
+          <div class="planes-cd-time">23:47:12</div>
+        </div>
+        <div style="padding:8px 10px;background:#fff">
+          <div style="font-size:10px;font-weight:500;color:#1A1A2E;text-align:center;margin-bottom:8px">Elige tu plan y sigue vendiendo</div>
+          <div class="planes-grid">
+            <div class="plan-card">
+              <div class="plan-name">Solo</div>
+              <div class="plan-price">$49</div>
+              <div class="plan-period">USD/mes</div>
+              <div class="plan-feature">1 agente · 500 msgs</div>
+            </div>
+            <div class="plan-card featured">
+              <div class="plan-badge">MÁS POPULAR</div>
+              <div class="plan-name">Agencia</div>
+              <div class="plan-price">$149</div>
+              <div class="plan-period">USD/mes</div>
+              <div class="plan-feature">5 agentes · 1,000 msgs</div>
+            </div>
+            <div class="plan-card">
+              <div class="plan-name">Pro</div>
+              <div class="plan-price">$299</div>
+              <div class="plan-period">USD/mes</div>
+              <div class="plan-feature">15 agentes · 5,000 msgs</div>
+            </div>
+          </div>
+          <div style="text-align:center;font-size:9px;color:#9090A8;margin-top:6px">✓ Garantía 30 días · ✓ Cancela cuando quieras · ✓ CFDI incluido</div>
+        </div>
+      </div>
+    </div>
+    <div class="screen-notes">
+      <strong>Aparece:</strong> Automáticamente el día 14 del trial cuando el agente hace login<br>
+      <strong>Al pagar:</strong> Stripe Checkout → webhook → agency.status = 'active'
+    </div>
+  </div>
+
+  <!-- COBROS -->
+  <div class="screen-block">
+    <div class="screen-header">
+      <div><div class="screen-num">F8-03</div><div class="screen-name">Cobros y Facturación</div></div>
+      <div class="screen-route">/admin/cobros</div>
+    </div>
+    <div class="screen-preview">
+      <div class="cobros">
+        <div class="cobros-sum">
+          <div class="cobros-sum-item"><div class="cobros-val">$4,891</div><div class="cobros-label">MRR</div></div>
+          <div class="cobros-sum-item"><div class="cobros-val">$58,692</div><div class="cobros-label">ARR</div></div>
+          <div class="cobros-sum-item"><div class="cobros-val">2</div><div class="cobros-label">PENDIENTES</div></div>
+        </div>
+        <div class="cobros-row">
+          <div class="cobros-status-ok"></div>
+          <div>
+            <div style="font-size:10px;color:#1A1A2E">Agencia Aguilar</div>
+            <div style="font-size:9px;color:#9090A8">1 abr 2026</div>
+          </div>
+          <div class="cobros-plan">Pro</div>
+          <div class="cobros-amount">$299</div>
+        </div>
+        <div class="cobros-row">
+          <div class="cobros-status-fail"></div>
+          <div>
+            <div style="font-size:10px;color:#A32D2D">Casas del Sur</div>
+            <div style="font-size:9px;color:#9090A8">29 mar 2026 · Fallido</div>
+          </div>
+          <div class="cobros-plan" style="background:#FCEBEB;color:#A32D2D;border-color:#F7C1C1">Solo</div>
+          <div class="cobros-amount" style="color:#A32D2D">$49</div>
+        </div>
+        <div class="cobros-row">
+          <div class="cobros-status-ok"></div>
+          <div>
+            <div style="font-size:10px;color:#1A1A2E">Flores Bienes Raíces</div>
+            <div style="font-size:9px;color:#9090A8">28 mar 2026</div>
+          </div>
+          <div class="cobros-plan">Agencia</div>
+          <div class="cobros-amount">$149</div>
+        </div>
+      </div>
+    </div>
+    <div class="screen-notes">
+      <strong>Fuente:</strong> Datos de Stripe via API · Se actualiza en tiempo real con webhooks<br>
+      <strong>Incluye:</strong> Filtros · Exportar CSV · Ver CFDI generados por Facturapi
+    </div>
+  </div>
+
+  <!-- DETALLE DE AGENCIA -->
+  <div class="screen-block">
+    <div class="screen-header">
+      <div><div class="screen-num">F8-04</div><div class="screen-name">Detalle de Agencia</div></div>
+      <div class="screen-route">/admin/agencias/[id]</div>
+    </div>
+    <div class="screen-preview">
+      <div class="agencia">
+        <div class="agencia-hero">
+          <div class="agencia-icon">🌊</div>
+          <div>
+            <div class="agencia-name">Agencia Aguilar</div>
+            <div class="agencia-meta">Plan Pro · Activa desde 15 feb 2026 · Luis Aguilar</div>
+          </div>
+          <div style="margin-left:auto;font-size:8px;font-weight:600;background:#EAF3DE;color:#3B6D11;padding:2px 7px;border-radius:10px">✓ ACTIVA</div>
+        </div>
+        <div class="agencia-tabs">
+          <div class="agencia-tab active">Resumen</div>
+          <div class="agencia-tab">Agentes</div>
+          <div class="agencia-tab">Props</div>
+          <div class="agencia-tab">Leads</div>
+          <div class="agencia-tab">Cobros</div>
+          <div class="agencia-tab">Config</div>
+        </div>
+        <div class="agencia-body">
+          <div class="agencia-row"><span class="agencia-key">MRR</span><span class="agencia-val" style="color:#854F0B">$299 USD/mes</span></div>
+          <div class="agencia-row"><span class="agencia-key">Leads este mes</span><span class="agencia-val">234</span></div>
+          <div class="agencia-row"><span class="agencia-key">Msgs del bot</span><span class="agencia-val">3,842 / 5,000</span></div>
+          <div class="agencia-row"><span class="agencia-key">Agentes</span><span class="agencia-val">5 / 15</span></div>
+          <div class="agencia-row"><span class="agencia-key">Props activas</span><span class="agencia-val">31 / 150</span></div>
+        </div>
+      </div>
+    </div>
+    <div class="screen-notes">
+      <strong>6 tabs:</strong> Resumen · Agentes · Propiedades · Leads · Cobros · Configuración técnica<br>
+      <strong>Acciones admin:</strong> Cambiar plan · Suspender · Reactivar · Dar crédito de mensajes
+    </div>
+  </div>
+
+  <!-- SOPORTE -->
+  <div class="screen-block">
+    <div class="screen-header">
+      <div><div class="screen-num">F8-05</div><div class="screen-name">Soporte</div></div>
+      <div class="screen-route">/admin/soporte</div>
+    </div>
+    <div class="screen-preview">
+      <div class="soporte">
+        <div style="padding:8px 12px;background:#F7F6F3;border-bottom:0.5px solid #EBEBEB;display:flex;gap:6px">
+          <div style="padding:3px 8px;border-radius:20px;font-size:9px;background:#FCEBEB;color:#A32D2D;border:1.5px solid #F7C1C1">🔴 Urgente (2)</div>
+          <div style="padding:3px 8px;border-radius:20px;font-size:9px;border:1.5px solid #D4D0C8;color:#9090A8">Todos (12)</div>
+        </div>
+        <div class="soporte-row">
+          <div class="soporte-priority" style="background:#A32D2D"></div>
+          <div>
+            <div class="soporte-title">Bot no responde desde ayer</div>
+            <div class="soporte-meta">Casas del Sur · hace 2h</div>
+          </div>
+          <div class="soporte-badge" style="background:#FCEBEB;color:#A32D2D">Urgente</div>
+        </div>
+        <div class="soporte-row">
+          <div class="soporte-priority" style="background:#BA7517"></div>
+          <div>
+            <div class="soporte-title">¿Cómo cambio el número de WhatsApp?</div>
+            <div class="soporte-meta">Agencia López · hace 5h</div>
+          </div>
+          <div class="soporte-badge" style="background:#FAEEDA;color:#854F0B">Normal</div>
+        </div>
+        <div class="soporte-row">
+          <div class="soporte-priority" style="background:#3B6D11"></div>
+          <div>
+            <div class="soporte-title">¿Puedo tener más de 150 propiedades?</div>
+            <div class="soporte-meta">Inmobiliaria Flores · hace 1d</div>
+          </div>
+          <div class="soporte-badge" style="background:#EAF3DE;color:#3B6D11">Resuelto</div>
+        </div>
+      </div>
+    </div>
+    <div class="screen-notes">
+      <strong>Incluye:</strong> Filtros por estado · Asignación de tickets · Chat interno · NPS por agencia
+    </div>
+  </div>
+
+  <!-- PLANES CONFIG -->
+  <div class="screen-block">
+    <div class="screen-header">
+      <div><div class="screen-num">F8-06</div><div class="screen-name">Configuración de Planes</div></div>
+      <div class="screen-route">/admin/ajustes</div>
+    </div>
+    <div class="screen-preview">
+      <div style="background:#fff;border-radius:8px;overflow:hidden">
+        <div style="padding:8px 12px;background:#F7F6F3;border-bottom:0.5px solid #EBEBEB;font-size:10px;font-weight:500;color:#1A1A2E">Planes activos</div>
+        <table style="width:100%;border-collapse:collapse;font-size:10px">
+          <tr style="background:#F7F6F3">
+            <th style="text-align:left;padding:5px 10px;color:#9090A8;font-weight:400;font-size:9px;border-bottom:0.5px solid #EBEBEB">PLAN</th>
+            <th style="text-align:left;padding:5px 10px;color:#9090A8;font-weight:400;font-size:9px;border-bottom:0.5px solid #EBEBEB">PRECIO</th>
+            <th style="text-align:left;padding:5px 10px;color:#9090A8;font-weight:400;font-size:9px;border-bottom:0.5px solid #EBEBEB">AGENTES</th>
+            <th style="text-align:left;padding:5px 10px;color:#9090A8;font-weight:400;font-size:9px;border-bottom:0.5px solid #EBEBEB">MSGS</th>
+          </tr>
+          <tr><td style="padding:6px 10px;border-bottom:0.5px solid #EBEBEB">Solo</td><td style="padding:6px 10px;border-bottom:0.5px solid #EBEBEB;color:#854F0B;font-weight:500">$49</td><td style="padding:6px 10px;border-bottom:0.5px solid #EBEBEB">1</td><td style="padding:6px 10px;border-bottom:0.5px solid #EBEBEB">500</td></tr>
+          <tr style="background:#FAEEDA22"><td style="padding:6px 10px;border-bottom:0.5px solid #EBEBEB">Agencia</td><td style="padding:6px 10px;border-bottom:0.5px solid #EBEBEB;color:#854F0B;font-weight:500">$149</td><td style="padding:6px 10px;border-bottom:0.5px solid #EBEBEB">5</td><td style="padding:6px 10px;border-bottom:0.5px solid #EBEBEB">1,000</td></tr>
+          <tr><td style="padding:6px 10px;border-bottom:0.5px solid #EBEBEB">Pro</td><td style="padding:6px 10px;border-bottom:0.5px solid #EBEBEB;color:#854F0B;font-weight:500">$299</td><td style="padding:6px 10px;border-bottom:0.5px solid #EBEBEB">15</td><td style="padding:6px 10px;border-bottom:0.5px solid #EBEBEB">5,000</td></tr>
+        </table>
+        <div style="padding:8px 12px;font-size:9px;color:#9090A8">Stripe Price IDs configurados en .env.local · Ver Design System Sección 17</div>
+      </div>
+    </div>
+    <div class="screen-notes">
+      <strong>Importante:</strong> Los planes se crean en Stripe Dashboard (Products) antes de la Fase 8<br>
+      <strong>Precio anual:</strong> 20% de descuento automático · Solo/Agencia/Pro mensual y anual = 6 Price IDs
+    </div>
+  </div>
+
+</div>
+
+<div style="margin-top:32px;padding:16px 20px;background:rgba(255,255,255,0.02);border-radius:10px;border:0.5px solid rgba(255,255,255,0.06);font-size:11px;color:rgba(255,255,255,0.3);text-align:center">
+  <a href="fase7-config.html" style="color:#BA7517;text-decoration:none">← Fase 7: Config</a>
+  &nbsp;·&nbsp;
+  <a href="INDEX.html" style="color:#BA7517;text-decoration:none">Índice</a>
+  &nbsp;·&nbsp;
+  <a href="movil.html" style="color:#BA7517;text-decoration:none">Móvil iPhone →</a>
+</div>
+
+</body>
+</html>

@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>InmoIA · Móvil iPhone + Errores y Estados Vacíos</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #0f0f1a; color: #fff; padding: 32px 20px; }
+  .section-title { font-size: 18px; font-weight: 500; margin-bottom: 4px; }
+  .section-sub { font-size: 13px; color: rgba(255,255,255,0.4); margin-bottom: 28px; }
+  .back { color: #BA7517; text-decoration: none; font-size: 12px; display: inline-block; margin-bottom: 28px; }
+  .divider { height: 0.5px; background: rgba(255,255,255,0.08); margin: 40px 0 32px; }
+
+  /* IPHONE FRAME */
+  .phones-grid { display: flex; gap: 24px; flex-wrap: wrap; }
+  .phone-wrap { display: flex; flex-direction: column; align-items: center; gap: 12px; }
+  .phone-label { font-size: 11px; color: rgba(255,255,255,0.4); }
+  .phone-frame { width: 180px; border-radius: 32px; border: 6px solid #1A1A1A; background: #000; overflow: hidden; box-shadow: 0 20px 60px rgba(0,0,0,0.6), inset 0 0 0 1px rgba(255,255,255,0.05); position: relative; }
+  .phone-notch { width: 60px; height: 20px; background: #000; border-radius: 0 0 14px 14px; margin: 0 auto; position: relative; z-index: 10; }
+  .phone-screen { background: #F7F6F3; min-height: 300px; }
+  .phone-home-indicator { height: 20px; background: #F7F6F3; display: flex; align-items: center; justify-content: center; }
+  .phone-home-bar { width: 80px; height: 4px; border-radius: 2px; background: #1A1A2E; opacity: 0.3; }
+
+  /* BOTTOM NAV */
+  .bottom-nav { display: flex; border-top: 0.5px solid #EBEBEB; background: #fff; }
+  .bnav-item { flex: 1; padding: 8px 4px 4px; text-align: center; cursor: pointer; }
+  .bnav-icon { font-size: 16px; }
+  .bnav-label { font-size: 7px; color: #9090A8; margin-top: 1px; }
+  .bnav-item.active .bnav-label { color: #BA7517; }
+  .bnav-item.active .bnav-icon-bar { background: #BA7517; }
+
+  /* MÓVIL PANTALLAS */
+  .mob-topbar { background: #0f0f1a; padding: 8px 12px; display: flex; align-items: center; justify-content: space-between; }
+  .mob-logo { font-size: 11px; font-weight: 500; color: #BA7517; }
+  .mob-stat { background: #1A1A2E; border-radius: 8px; padding: 10px; margin: 8px; }
+  .mob-stat-val { font-size: 22px; font-weight: 500; color: #BA7517; }
+  .mob-stat-label { font-size: 8px; color: rgba(255,255,255,0.4); letter-spacing: 0.05em; }
+  .mob-alert { background: rgba(186,117,23,0.15); border: 0.5px solid rgba(186,117,23,0.3); margin: 0 8px 6px; border-radius: 8px; padding: 7px 10px; font-size: 9px; color: #FAC775; }
+  .mob-lead { display: flex; gap: 8px; align-items: center; padding: 7px 12px; border-bottom: 0.5px solid rgba(255,255,255,0.06); }
+  .mob-lead-av { width: 26px; height: 26px; border-radius: 8px; background: #FAEEDA; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 600; color: #854F0B; flex-shrink: 0; }
+  .mob-lead-name { font-size: 10px; font-weight: 500; color: rgba(255,255,255,0.8); }
+  .mob-lead-msg { font-size: 8px; color: rgba(255,255,255,0.4); }
+
+  /* FAB */
+  .mob-fab { position: absolute; bottom: 64px; right: 10px; width: 36px; height: 36px; border-radius: 50%; background: #BA7517; box-shadow: 0 4px 12px rgba(186,117,23,0.4); display: flex; align-items: center; justify-content: center; font-size: 18px; font-weight: 300; color: #fff; cursor: pointer; z-index: 20; }
+
+  /* LEADS MÓVIL */
+  .mob-leads-top { padding: 8px 10px; background: #F7F6F3; }
+  .mob-leads-search { width: 100%; border: 0.5px solid #D4D0C8; border-radius: 20px; padding: 5px 10px; font-size: 10px; color: #1A1A2E; margin-bottom: 6px; }
+  .mob-filters { display: flex; gap: 4px; overflow-x: auto; }
+  .mob-filter { padding: 3px 8px; border-radius: 20px; font-size: 8px; border: 1.5px solid #D4D0C8; color: #9090A8; background: #fff; white-space: nowrap; }
+  .mob-filter.hot { border-color: #BA7517; background: #FAEEDA; color: #854F0B; }
+  .mob-lead-item { display: flex; gap: 8px; align-items: center; padding: 8px 10px; border-bottom: 0.5px solid #EBEBEB; background: #fff; }
+  .mob-lead-av-light { width: 28px; height: 28px; border-radius: 8px; background: #FAEEDA; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 600; color: #854F0B; flex-shrink: 0; }
+  .mob-lead-name-light { font-size: 11px; font-weight: 500; color: #1A1A2E; }
+  .mob-lead-sub { font-size: 9px; color: #9090A8; }
+
+  /* CHAT MÓVIL */
+  .mob-wa-header { background: #075E54; padding: 7px 10px; display: flex; gap: 6px; align-items: center; }
+  .mob-wa-av { width: 22px; height: 22px; border-radius: 50%; background: #25D366; display: flex; align-items: center; justify-content: center; font-size: 9px; font-weight: 700; color: #fff; }
+  .mob-wa-msgs { background: #ECE5DD; padding: 6px 8px; display: flex; flex-direction: column; gap: 4px; }
+  .mob-bubble { max-width: 80%; padding: 5px 8px; font-size: 9px; line-height: 1.4; border-radius: 8px; }
+  .mob-bubble.bot    { background: #fff; border-radius: 2px 8px 8px 8px; align-self: flex-start; color: #1a1a1a; }
+  .mob-bubble.client { background: #DCF8C6; border-radius: 8px 2px 8px 8px; align-self: flex-end; color: #1a1a1a; }
+  .mob-wa-input-bar { background: #F0F0F0; padding: 5px 8px; display: flex; gap: 5px; }
+  .mob-wa-input-box { flex: 1; border: none; border-radius: 16px; padding: 4px 8px; font-size: 9px; background: #fff; }
+  .mob-wa-send { width: 22px; height: 22px; border-radius: 50%; background: #075E54; border: none; color: #fff; font-size: 10px; display: flex; align-items: center; justify-content: center; cursor: pointer; }
+
+  /* ERRORES Y ESTADOS VACÍOS */
+  .states-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px; }
+  .state-card { background: rgba(255,255,255,0.03); border: 0.5px solid rgba(255,255,255,0.08); border-radius: 12px; overflow: hidden; }
+  .state-header { padding: 10px 14px; border-bottom: 0.5px solid rgba(255,255,255,0.06); }
+  .state-type { font-size: 10px; color: #BA7517; font-weight: 600; letter-spacing: 0.05em; }
+  .state-name { font-size: 12px; font-weight: 500; }
+  .state-preview { padding: 14px; }
+  .state-notes { padding: 8px 14px; background: rgba(186,117,23,0.06); border-top: 0.5px solid rgba(186,117,23,0.15); font-size: 10px; color: rgba(255,255,255,0.4); }
+  .state-notes strong { color: #BA7517; }
+
+  /* EMPTY STATE */
+  .empty { background: #fff; border-radius: 8px; padding: 24px; text-align: center; }
+  .empty-icon { font-size: 32px; margin-bottom: 8px; }
+  .empty-title { font-size: 13px; font-weight: 500; color: #1A1A2E; margin-bottom: 4px; }
+  .empty-desc { font-size: 10px; color: #9090A8; margin-bottom: 14px; line-height: 1.5; }
+  .empty-btn { background: #BA7517; color: #fff; border: none; border-radius: 8px; padding: 7px 16px; font-size: 10px; cursor: pointer; }
+
+  /* SKELETON */
+  .skeleton-preview { background: #fff; border-radius: 8px; padding: 12px; display: flex; flex-direction: column; gap: 8px; }
+  .skel { background: #F0EDE8; border-radius: 5px; animation: shimmer 1.5s ease infinite; }
+  @keyframes shimmer { 0%,100%{opacity:0.5} 50%{opacity:1} }
+
+  /* TOAST */
+  .toast-stack { display: flex; flex-direction: column; gap: 6px; }
+  .toast { display: flex; align-items: flex-start; gap: 8px; padding: 10px 12px; border-radius: 8px; font-size: 10px; position: relative; overflow: hidden; }
+  .toast-bar { position: absolute; bottom: 0; left: 0; height: 2px; background: currentColor; opacity: 0.3; width: 60%; }
+  .toast.success { background: #EAF3DE; color: #27500A; border: 0.5px solid #C0DD97; }
+  .toast.warning { background: #FAEEDA; color: #412402; border: 0.5px solid #FAC775; }
+  .toast.error   { background: #FCEBEB; color: #7A1F1F; border: 0.5px solid #F7C1C1; }
+  .toast.info    { background: #E6F1FB; color: #042C53; border: 0.5px solid #B5D4F4; }
+
+  /* ERROR PAGE */
+  .error-page { background: #fff; border-radius: 8px; padding: 20px; text-align: center; }
+  .error-code { font-size: 42px; font-weight: 500; color: #EBEBEB; margin-bottom: 4px; }
+  .error-title { font-size: 13px; font-weight: 500; color: #1A1A2E; margin-bottom: 4px; }
+  .error-desc { font-size: 10px; color: #9090A8; margin-bottom: 14px; }
+  .error-btn { background: #BA7517; color: #fff; border: none; border-radius: 8px; padding: 7px 14px; font-size: 10px; cursor: pointer; margin-right: 6px; }
+  .error-btn-ghost { background: none; color: #4A4A6A; border: 0.5px solid #D4D0C8; border-radius: 8px; padding: 7px 14px; font-size: 10px; cursor: pointer; }
+</style>
+</head>
+<body>
+
+<a href="INDEX.html" class="back">← Índice</a>
+
+<!-- ========================= -->
+<!-- SECCIÓN MÓVIL -->
+<!-- ========================= -->
+<div class="section-title">📱 Versión Móvil iPhone (PWA)</div>
+<div class="section-sub">Responsive + PWA · Funciona igual que una app nativa desde Safari</div>
+
+<div class="phones-grid">
+
+  <!-- DASHBOARD MÓVIL -->
+  <div class="phone-wrap">
+    <div class="phone-label">Dashboard</div>
+    <div class="phone-frame" style="position:relative">
+      <div class="phone-notch"></div>
+      <div class="phone-screen" style="background:#0f0f1a;min-height:300px">
+        <div class="mob-topbar">
+          <div class="mob-logo">🌊 InmoIA</div>
+          <div style="font-size:9px;color:rgba(255,255,255,0.4)">🔔 3</div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;padding:8px">
+          <div class="mob-stat"><div class="mob-stat-val">23</div><div class="mob-stat-label">LEADS HOY</div></div>
+          <div class="mob-stat"><div class="mob-stat-val">83%</div><div class="mob-stat-label">BOT AUTO</div></div>
+          <div class="mob-stat"><div class="mob-stat-val">6</div><div class="mob-stat-label">VISITAS</div></div>
+          <div class="mob-stat"><div class="mob-stat-val">31</div><div class="mob-stat-label">PROPS</div></div>
+        </div>
+        <div class="mob-alert">🔥 Carlos Mendoza · Score 87/100</div>
+        <div class="mob-lead">
+          <div class="mob-lead-av">CM</div>
+          <div><div class="mob-lead-name">Carlos Mendoza</div><div class="mob-lead-msg">¿Cuándo puedo ver la casa?</div></div>
+          <div style="font-size:7px;color:rgba(255,255,255,0.3);margin-left:auto">5m</div>
+        </div>
+        <div class="mob-lead">
+          <div class="mob-lead-av" style="background:#E1F5EE;color:#0F6E56">AT</div>
+          <div><div class="mob-lead-name">Ana Torres</div><div class="mob-lead-msg">Me interesa el depto</div></div>
+          <div style="font-size:7px;color:rgba(255,255,255,0.3);margin-left:auto">2h</div>
+        </div>
+        <div class="mob-fab">+</div>
+      </div>
+      <div style="background:#0f0f1a">
+        <div class="bottom-nav" style="background:#1A1A2E;border-top-color:rgba(255,255,255,0.08)">
+          <div class="bnav-item active" style="border-top:2px solid #BA7517">
+            <div class="bnav-icon">⬡</div>
+            <div class="bnav-label" style="color:#BA7517">Inicio</div>
+          </div>
+          <div class="bnav-item"><div class="bnav-icon">👥</div><div class="bnav-label" style="color:rgba(255,255,255,0.4)">Leads</div></div>
+          <div class="bnav-item"><div class="bnav-icon">🏠</div><div class="bnav-label" style="color:rgba(255,255,255,0.4)">Props</div></div>
+          <div class="bnav-item"><div class="bnav-icon">💬</div><div class="bnav-label" style="color:rgba(255,255,255,0.4)">Bot</div></div>
+          <div class="bnav-item"><div class="bnav-icon">⚙️</div><div class="bnav-label" style="color:rgba(255,255,255,0.4)">Más</div></div>
+        </div>
+      </div>
+      <div class="phone-home-indicator" style="background:#0f0f1a"><div class="phone-home-bar" style="background:#fff"></div></div>
+    </div>
+  </div>
+
+  <!-- LEADS MÓVIL -->
+  <div class="phone-wrap">
+    <div class="phone-label">Leads</div>
+    <div class="phone-frame" style="position:relative">
+      <div class="phone-notch"></div>
+      <div class="phone-screen" style="min-height:300px">
+        <div class="mob-leads-top">
+          <input class="mob-leads-search" placeholder="🔍 Buscar leads...">
+          <div class="mob-filters">
+            <div class="mob-filter hot">🔥 Calientes</div>
+            <div class="mob-filter">🟡 Tibios</div>
+            <div class="mob-filter">🧊 Fríos</div>
+            <div class="mob-filter">Todos</div>
+          </div>
+        </div>
+        <div class="mob-lead-item">
+          <div class="mob-lead-av-light">CM</div>
+          <div style="flex:1"><div class="mob-lead-name-light">Carlos Mendoza</div><div class="mob-lead-sub">Casa Coyoacán · 5 min</div></div>
+          <div style="font-size:9px;font-weight:600;padding:2px 6px;border-radius:10px;background:#FCEBEB;color:#A32D2D">hot</div>
+        </div>
+        <div class="mob-lead-item">
+          <div class="mob-lead-av-light" style="background:#E1F5EE;color:#0F6E56">AT</div>
+          <div style="flex:1"><div class="mob-lead-name-light">Ana Torres</div><div class="mob-lead-sub">Depto Santa Fe · 2h</div></div>
+          <div style="font-size:9px;font-weight:600;padding:2px 6px;border-radius:10px;background:#FAEEDA;color:#854F0B">tibio</div>
+        </div>
+        <div class="mob-lead-item">
+          <div class="mob-lead-av-light" style="background:#f0f0f0;color:#9090A8">RS</div>
+          <div style="flex:1"><div class="mob-lead-name-light">Roberto Silva</div><div class="mob-lead-sub">Huatulco · ayer</div></div>
+          <div style="font-size:9px;font-weight:600;padding:2px 6px;border-radius:10px;background:#f0f0f0;color:#9090A8">frío</div>
+        </div>
+        <div class="mob-lead-item">
+          <div class="mob-lead-av-light" style="background:#E6F1FB;color:#185FA5">ML</div>
+          <div style="flex:1"><div class="mob-lead-name-light">María López</div><div class="mob-lead-sub">Pedregal · 2 días</div></div>
+          <div style="font-size:9px;font-weight:600;padding:2px 6px;border-radius:10px;background:#FAEEDA;color:#854F0B">tibio</div>
+        </div>
+        <div class="mob-fab">+</div>
+      </div>
+      <div>
+        <div class="bottom-nav">
+          <div class="bnav-item"><div class="bnav-icon">⬡</div><div class="bnav-label">Inicio</div></div>
+          <div class="bnav-item active" style="border-top:2px solid #BA7517"><div class="bnav-icon">👥</div><div class="bnav-label" style="color:#BA7517">Leads</div></div>
+          <div class="bnav-item"><div class="bnav-icon">🏠</div><div class="bnav-label">Props</div></div>
+          <div class="bnav-item"><div class="bnav-icon">💬</div><div class="bnav-label">Bot</div></div>
+          <div class="bnav-item"><div class="bnav-icon">⚙️</div><div class="bnav-label">Más</div></div>
+        </div>
+      </div>
+      <div class="phone-home-indicator"><div class="phone-home-bar"></div></div>
+    </div>
+  </div>
+
+  <!-- CHATBOT MÓVIL -->
+  <div class="phone-wrap">
+    <div class="phone-label">Chatbot</div>
+    <div class="phone-frame" style="position:relative">
+      <div class="phone-notch"></div>
+      <div class="phone-screen" style="min-height:300px">
+        <div class="mob-wa-header">
+          <button style="background:none;border:none;color:rgba(255,255,255,0.6);font-size:12px;cursor:pointer">←</button>
+          <div class="mob-wa-av">C</div>
+          <div style="flex:1">
+            <div style="font-size:10px;font-weight:500;color:#fff">Carlos Mendoza</div>
+            <div style="font-size:8px;color:rgba(255,255,255,0.5)">Sofía · Bot activo</div>
+          </div>
+          <button style="background:#BA7517;color:#fff;border:none;border-radius:10px;padding:3px 7px;font-size:7px;cursor:pointer">Tomar control</button>
+        </div>
+        <div class="mob-wa-msgs" style="min-height:200px">
+          <div style="display:flex;flex-direction:column;align-items:flex-start"><div class="mob-bubble bot">¡Hola! Soy Sofía 🏡 ¿En qué puedo ayudarte?</div></div>
+          <div style="display:flex;flex-direction:column;align-items:flex-end"><div class="mob-bubble client">Me interesa la casa de Coyoacán</div></div>
+          <div style="display:flex;flex-direction:column;align-items:flex-start"><div class="mob-bubble bot">¡Con gusto! 210m², jardín, $5.8M. ¿Agendamos visita? 🗓️</div></div>
+          <div style="display:flex;flex-direction:column;align-items:flex-end"><div class="mob-bubble client">Sí, ¿mañana a las 10am?</div></div>
+          <div style="display:flex;flex-direction:column;align-items:flex-start"><div class="mob-bubble bot">¡Perfecto! Te confirmo ahora 😊</div></div>
+        </div>
+        <div class="mob-wa-input-bar">
+          <input class="mob-wa-input-box" placeholder="Escribe...">
+          <div class="mob-wa-send">➤</div>
+        </div>
+      </div>
+      <div>
+        <div class="bottom-nav">
+          <div class="bnav-item"><div class="bnav-icon">⬡</div><div class="bnav-label">Inicio</div></div>
+          <div class="bnav-item"><div class="bnav-icon">👥</div><div class="bnav-label">Leads</div></div>
+          <div class="bnav-item"><div class="bnav-icon">🏠</div><div class="bnav-label">Props</div></div>
+          <div class="bnav-item active" style="border-top:2px solid #BA7517"><div class="bnav-icon">💬</div><div class="bnav-label" style="color:#BA7517">Bot</div></div>
+          <div class="bnav-item"><div class="bnav-icon">⚙️</div><div class="bnav-label">Más</div></div>
+        </div>
+      </div>
+      <div class="phone-home-indicator"><div class="phone-home-bar"></div></div>
+    </div>
+  </div>
+
+  <!-- PROPS MÓVIL -->
+  <div class="phone-wrap">
+    <div class="phone-label">Propiedades</div>
+    <div class="phone-frame" style="position:relative">
+      <div class="phone-notch"></div>
+      <div class="phone-screen" style="min-height:300px">
+        <div style="padding:8px 10px;background:#F7F6F3;display:flex;gap:6px;align-items:center;border-bottom:0.5px solid #EBEBEB">
+          <span style="font-size:11px;font-weight:500;color:#1A1A2E;flex:1">Propiedades</span>
+          <span style="font-size:9px;color:#9090A8">31 activas</span>
+        </div>
+        <div style="padding:8px 10px;background:#fff">
+          <input style="width:100%;border:0.5px solid #D4D0C8;border-radius:20px;padding:5px 10px;font-size:10px;color:#1A1A2E;margin-bottom:6px" placeholder="🔍 Buscar...">
+          <div style="display:flex;gap:4px;overflow-x:auto">
+            <div style="padding:3px 8px;border-radius:20px;font-size:8px;border:1.5px solid #BA7517;background:#FAEEDA;color:#854F0B;white-space:nowrap">Casa</div>
+            <div style="padding:3px 8px;border-radius:20px;font-size:8px;border:1.5px solid #D4D0C8;color:#9090A8;white-space:nowrap">Terreno</div>
+            <div style="padding:3px 8px;border-radius:20px;font-size:8px;border:1.5px solid #D4D0C8;color:#9090A8;white-space:nowrap">Depto</div>
+          </div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;padding:8px">
+          <div style="background:#fff;border-radius:8px;border:0.5px solid #EBEBEB;overflow:hidden">
+            <div style="height:55px;background:linear-gradient(135deg,#8B7355,#C4A882);display:flex;align-items:center;justify-content:center;font-size:22px">🏡</div>
+            <div style="padding:5px 7px"><div style="font-size:9px;font-weight:500;color:#1A1A2E">Casa Coyoacán</div><div style="font-size:10px;font-weight:500;color:#854F0B">$5.8M</div></div>
+          </div>
+          <div style="background:#fff;border-radius:8px;border:0.5px solid #EBEBEB;overflow:hidden">
+            <div style="height:55px;background:linear-gradient(135deg,#1a5f7a,#2d9cbb);display:flex;align-items:center;justify-content:center;font-size:22px">🌊</div>
+            <div style="padding:5px 7px"><div style="font-size:9px;font-weight:500;color:#1A1A2E">Terreno Huatulco</div><div style="font-size:10px;font-weight:500;color:#854F0B">$2.8M</div></div>
+          </div>
+        </div>
+        <div class="mob-fab">+</div>
+      </div>
+      <div>
+        <div class="bottom-nav">
+          <div class="bnav-item"><div class="bnav-icon">⬡</div><div class="bnav-label">Inicio</div></div>
+          <div class="bnav-item"><div class="bnav-icon">👥</div><div class="bnav-label">Leads</div></div>
+          <div class="bnav-item active" style="border-top:2px solid #BA7517"><div class="bnav-icon">🏠</div><div class="bnav-label" style="color:#BA7517">Props</div></div>
+          <div class="bnav-item"><div class="bnav-icon">💬</div><div class="bnav-label">Bot</div></div>
+          <div class="bnav-item"><div class="bnav-icon">⚙️</div><div class="bnav-label">Más</div></div>
+        </div>
+      </div>
+      <div class="phone-home-indicator"><div class="phone-home-bar"></div></div>
+    </div>
+  </div>
+
+</div>
+
+<div class="divider"></div>
+
+<!-- ========================= -->
+<!-- SECCIÓN ESTADOS VACÍOS Y ERRORES -->
+<!-- ========================= -->
+<div class="section-title">🔴 Estados Vacíos, Errores y Loaders</div>
+<div class="section-sub">Componentes globales usados en todas las fases</div>
+
+<div class="states-grid">
+
+  <!-- EMPTY STATES -->
+  <div class="state-card">
+    <div class="state-header"><div class="state-type">GLOBAL</div><div class="state-name">Estados Vacíos (Empty States)</div></div>
+    <div class="state-preview">
+      <div class="empty">
+        <div class="empty-icon">👥</div>
+        <div class="empty-title">Aún no tienes leads</div>
+        <div class="empty-desc">Cuando alguien escriba a tu WhatsApp, aparecerá aquí automáticamente.</div>
+        <button class="empty-btn">Configurar WhatsApp →</button>
+      </div>
+    </div>
+    <div class="state-notes">
+      <strong>Usar en:</strong> /leads · /propiedades · /chatbot · /calendario · /reportes · /notificaciones<br>
+      <strong>Estructura:</strong> emoji grande + título + descripción 2 líneas max + btn-brand + btn-ghost opcional
+    </div>
+  </div>
+
+  <!-- SKELETON -->
+  <div class="state-card">
+    <div class="state-header"><div class="state-type">GLOBAL</div><div class="state-name">Skeleton Loaders</div></div>
+    <div class="state-preview">
+      <div class="skeleton-preview">
+        <div style="display:flex;gap:8px;align-items:center;margin-bottom:4px">
+          <div class="skel" style="width:32px;height:32px;border-radius:8px;flex-shrink:0"></div>
+          <div style="flex:1;display:flex;flex-direction:column;gap:4px">
+            <div class="skel" style="height:10px;width:60%"></div>
+            <div class="skel" style="height:8px;width:40%"></div>
+          </div>
+          <div class="skel" style="width:40px;height:16px;border-radius:10px"></div>
+        </div>
+        <div style="display:flex;gap:8px;align-items:center;margin-bottom:4px">
+          <div class="skel" style="width:32px;height:32px;border-radius:8px;flex-shrink:0"></div>
+          <div style="flex:1;display:flex;flex-direction:column;gap:4px">
+            <div class="skel" style="height:10px;width:50%"></div>
+            <div class="skel" style="height:8px;width:35%"></div>
+          </div>
+          <div class="skel" style="width:40px;height:16px;border-radius:10px"></div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:6px;margin-top:8px">
+          <div class="skel" style="height:50px;border-radius:8px"></div>
+          <div class="skel" style="height:50px;border-radius:8px"></div>
+          <div class="skel" style="height:50px;border-radius:8px"></div>
+          <div class="skel" style="height:50px;border-radius:8px"></div>
+        </div>
+      </div>
+    </div>
+    <div class="state-notes">
+      <strong>Mostrar mientras</strong> cargan datos async de Supabase<br>
+      <strong>Animación:</strong> shimmer — opacity 0.5 → 1 → 0.5 · 1.5s ease infinite
+    </div>
+  </div>
+
+  <!-- TOASTS -->
+  <div class="state-card">
+    <div class="state-header"><div class="state-type">GLOBAL</div><div class="state-name">Toast Notifications</div></div>
+    <div class="state-preview">
+      <div class="toast-stack">
+        <div class="toast success">✅ <div><div style="font-weight:500">Propiedad publicada</div><div style="opacity:0.7;font-size:9px">Casa Coyoacán ya está en el catálogo</div></div><div class="toast-bar"></div></div>
+        <div class="toast warning">⚠️ <div><div style="font-weight:500">Límite al 80%</div><div style="opacity:0.7;font-size:9px">Te quedan 200 mensajes este mes</div></div><div class="toast-bar"></div></div>
+        <div class="toast error">❌ <div><div style="font-weight:500">Error al conectar WhatsApp</div><div style="opacity:0.7;font-size:9px">Verifica tu número en configuración</div></div><div class="toast-bar"></div></div>
+        <div class="toast info">💡 <div><div style="font-weight:500">Lead caliente detectado</div><div style="opacity:0.7;font-size:9px">Carlos Mendoza · Score 87/100</div></div><div class="toast-bar"></div></div>
+      </div>
+    </div>
+    <div class="state-notes">
+      <strong>4 tipos:</strong> success (verde) · warning (ámbar) · error (rojo) · info (azul)<br>
+      <strong>Barra inferior:</strong> cuenta regresiva de 4 segundos · Esquina superior derecha · Z-index 50
+    </div>
+  </div>
+
+  <!-- ERRORES -->
+  <div class="state-card">
+    <div class="state-header"><div class="state-type">GLOBAL</div><div class="state-name">Páginas de Error</div></div>
+    <div class="state-preview">
+      <div class="error-page">
+        <div class="error-code">500</div>
+        <div class="error-title">Error del servidor</div>
+        <div class="error-desc">Algo salió mal de nuestro lado. Estamos trabajando para solucionarlo.</div>
+        <button class="error-btn">Reintentar</button>
+        <button class="error-btn-ghost">Ir al inicio</button>
+      </div>
+    </div>
+    <div class="state-notes">
+      <strong>Páginas:</strong> 404 (No encontrado) · 500 (Error servidor) · 403 (Sin permiso) · Offline (Sin internet)<br>
+      <strong>Botón Reintentar:</strong> vuelve a intentar la última operación
+    </div>
+  </div>
+
+</div>
+
+<div style="margin-top:32px;padding:16px 20px;background:rgba(255,255,255,0.02);border-radius:10px;border:0.5px solid rgba(255,255,255,0.06);font-size:11px;color:rgba(255,255,255,0.3);text-align:center">
+  <a href="fase8-admin.html" style="color:#BA7517;text-decoration:none">← Fase 8: Admin</a>
+  &nbsp;·&nbsp;
+  <a href="INDEX.html" style="color:#BA7517;text-decoration:none">↑ Índice principal</a>
+</div>
+
+</body>
+</html>

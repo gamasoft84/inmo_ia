@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>InmoIA · Fase 1 — Setup del Proyecto</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #0f0f1a; color: #fff; padding: 32px 20px; }
+  .nav { display: flex; align-items: center; gap: 12px; margin-bottom: 32px; }
+  .back { color: #BA7517; text-decoration: none; font-size: 12px; }
+  .phase-title { font-size: 22px; font-weight: 500; }
+  .phase-sub { font-size: 13px; color: rgba(255,255,255,0.4); margin-top: 4px; margin-bottom: 12px; }
+  .info-banner { background: rgba(186,117,23,0.1); border: 0.5px solid rgba(186,117,23,0.3); border-radius: 8px; padding: 12px 16px; font-size: 12px; color: rgba(255,255,255,0.6); margin-bottom: 28px; line-height: 1.7; }
+  .info-banner strong { color: #BA7517; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: 20px; }
+  .card { background: rgba(255,255,255,0.03); border: 0.5px solid rgba(255,255,255,0.08); border-radius: 12px; overflow: hidden; }
+  .card-header { padding: 14px 16px; border-bottom: 0.5px solid rgba(255,255,255,0.06); display: flex; align-items: center; justify-content: space-between; }
+  .card-num { font-size: 10px; color: #BA7517; font-weight: 600; letter-spacing: 0.05em; }
+  .card-name { font-size: 13px; font-weight: 500; margin-top: 2px; }
+  .card-body { padding: 16px; }
+  .card-notes { padding: 10px 16px; background: rgba(186,117,23,0.06); border-top: 0.5px solid rgba(186,117,23,0.15); font-size: 11px; color: rgba(255,255,255,0.4); line-height: 1.6; }
+  .card-notes strong { color: #BA7517; }
+  .code-block { background: #070710; border-radius: 8px; padding: 14px 16px; font-family: 'JetBrains Mono', 'Fira Code', monospace; font-size: 11px; line-height: 1.9; overflow-x: auto; }
+  .code-block::-webkit-scrollbar { height: 3px; }
+  .code-block::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 2px; }
+  .c-comment { color: #555; }
+  .c-key { color: #BA7517; }
+  .c-val { color: #7EC8E3; }
+  .c-str { color: #A8E6A3; }
+  .c-brand { color: #FAC775; }
+  .c-green { color: #A8E6A3; }
+  .c-gray { color: #666; }
+  .c-red { color: #F4A4A4; }
+  .step-list { display: flex; flex-direction: column; gap: 10px; }
+  .step-item { display: flex; gap: 12px; align-items: flex-start; }
+  .step-num { width: 24px; height: 24px; border-radius: 50%; background: #BA7517; color: #fff; font-size: 10px; font-weight: 700; display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 1px; }
+  .step-num.done { background: #EAF3DE; color: #3B6D11; }
+  .step-title { font-size: 12px; font-weight: 500; color: #fff; margin-bottom: 3px; }
+  .step-desc { font-size: 11px; color: rgba(255,255,255,0.4); line-height: 1.5; }
+  .tag { display: inline-flex; align-items: center; gap: 4px; font-size: 9px; font-weight: 600; padding: 2px 8px; border-radius: 20px; }
+  .tag-required { background: #FCEBEB; color: #A32D2D; }
+  .tag-optional { background: #F7F6F3; color: #9090A8; }
+  .tag-free { background: #EAF3DE; color: #3B6D11; }
+  .file-tree { font-family: 'JetBrains Mono', monospace; font-size: 11px; line-height: 2; color: rgba(255,255,255,0.6); }
+  .file-tree .folder { color: #BA7517; }
+  .file-tree .file { color: rgba(255,255,255,0.5); }
+  .file-tree .important { color: #A8E6A3; }
+  .checklist { display: flex; flex-direction: column; gap: 6px; }
+  .check-item { display: flex; align-items: flex-start; gap: 8px; font-size: 11px; color: rgba(255,255,255,0.6); line-height: 1.5; }
+  .check-box { width: 16px; height: 16px; border-radius: 4px; border: 1.5px solid rgba(255,255,255,0.15); flex-shrink: 0; margin-top: 1px; }
+  .check-box.done { background: #BA7517; border-color: #BA7517; display: flex; align-items: center; justify-content: center; font-size: 9px; color: #fff; }
+</style>
+</head>
+<body>
+
+<div class="nav">
+  <a href="INDEX.html" class="back">← Índice</a>
+  <span style="color:rgba(255,255,255,0.2)">|</span>
+  <span style="font-size:11px;color:rgba(255,255,255,0.3)">FASE 1</span>
+</div>
+
+<div class="phase-title">⚙️ Fase 1 — Setup del Proyecto</div>
+<div class="phase-sub">Fundamentos: Next.js + Tailwind + Supabase + Auth + PWA</div>
+
+<div class="info-banner">
+  <strong>⚠️ Esta fase no tiene pantallas visuales</strong> — es pura configuración técnica.<br>
+  Usa este archivo como <strong>checklist y referencia de comandos</strong> para darle a Claude Code.<br>
+  <strong>Prompt sugerido:</strong> "Construye la Fase 1 del Design System de InmoIA. Aquí están los pasos exactos que necesito..."
+</div>
+
+<div class="grid">
+
+  <!-- PASO 1: CREAR PROYECTO -->
+  <div class="card">
+    <div class="card-header">
+      <div><div class="card-num">F1-01</div><div class="card-name">Crear proyecto Next.js</div></div>
+      <span class="tag tag-required">Requerido</span>
+    </div>
+    <div class="card-body">
+      <div class="code-block">
+<span class="c-comment"># En terminal, en tu carpeta de proyectos</span>
+npx create-next-app@latest inmoia \
+  --typescript \
+  --tailwind \
+  --app \
+  --src-dir \
+  --import-alias "@/*"
+
+<span class="c-comment"># Entrar al proyecto</span>
+cd inmoia
+
+<span class="c-comment"># Instalar dependencias de InmoIA</span>
+npm install @supabase/supabase-js @supabase/ssr
+npm install @anthropic-ai/sdk
+npm install twilio resend stripe
+npm install lucide-react
+npm install @vis.gl/react-google-maps
+npm install next-pwa
+npm install @sentry/nextjs
+      </div>
+    </div>
+    <div class="card-notes">
+      <strong>Node.js 20+</strong> requerido — verificar con <code>node --version</code><br>
+      <strong>Resultado:</strong> Carpeta inmoia/ con Next.js 14 configurado
+    </div>
+  </div>
+
+  <!-- PASO 2: GLOBALS.CSS -->
+  <div class="card">
+    <div class="card-header">
+      <div><div class="card-num">F1-02</div><div class="card-name">Variables CSS en globals.css</div></div>
+      <span class="tag tag-required">Requerido</span>
+    </div>
+    <div class="card-body">
+      <div class="code-block">
+<span class="c-comment">/* app/globals.css — pegar el bloque completo */</span>
+<span class="c-comment">/* de la Sección 2 del Design System           */</span>
+
+<span class="c-green">@import url('https://fonts.googleapis.com/</span>
+<span class="c-green">  css2?family=Sora:wght@300;400;500;600');</span>
+
+:root {
+  <span class="c-key">--brand</span>:        <span class="c-val">#BA7517</span>;
+  <span class="c-key">--brand-dark</span>:   <span class="c-val">#854F0B</span>;
+  <span class="c-key">--brand-light</span>:  <span class="c-val">#FAEEDA</span>;
+  <span class="c-key">--brand-border</span>: <span class="c-val">#FAC775</span>;
+  <span class="c-key">--brand-text</span>:   <span class="c-val">#412402</span>;
+  <span class="c-key">--font-sans</span>: <span class="c-str">'Sora', sans-serif</span>;
+  <span class="c-key">--radius-lg</span>: <span class="c-val">12px</span>;
+  <span class="c-key">--radius-md</span>: <span class="c-val">8px</span>;
+  <span class="c-comment">/* ... resto en Sección 2 del Design System */</span>
+}
+      </div>
+    </div>
+    <div class="card-notes">
+      <strong>Importante:</strong> Copiar el bloque COMPLETO de la Sección 2 del Design System<br>
+      Incluye: tema claro, tema oscuro, sidebar, colores semánticos, WhatsApp, reset y scrollbars
+    </div>
+  </div>
+
+  <!-- PASO 3: TAILWIND CONFIG -->
+  <div class="card">
+    <div class="card-header">
+      <div><div class="card-num">F1-03</div><div class="card-name">Tailwind + Next.js config</div></div>
+      <span class="tag tag-required">Requerido</span>
+    </div>
+    <div class="card-body">
+      <div class="code-block">
+<span class="c-comment">// tailwind.config.ts</span>
+<span class="c-key">content</span>: [<span class="c-str">'./app/**/*.{ts,tsx}'</span>,
+           <span class="c-str">'./components/**/*.{ts,tsx}'</span>],
+<span class="c-key">theme</span>: {
+  <span class="c-key">extend</span>: {
+    <span class="c-key">fontFamily</span>: {
+      <span class="c-key">sans</span>: [<span class="c-str">'Sora'</span>, <span class="c-str">'sans-serif'</span>]
+    },
+    <span class="c-key">screens</span>: {
+      <span class="c-key">sm</span>: <span class="c-str">'640px'</span>, <span class="c-key">md</span>: <span class="c-str">'768px'</span>,
+      <span class="c-key">lg</span>: <span class="c-str">'1024px'</span>, <span class="c-key">xl</span>: <span class="c-str">'1280px'</span>
+    }
+  }
+}
+
+<span class="c-comment">// next.config.ts</span>
+<span class="c-key">const</span> withPWA = require(<span class="c-str">'next-pwa'</span>)({
+  <span class="c-key">dest</span>: <span class="c-str">'public'</span>,
+  <span class="c-key">disable</span>: process.env.NODE_ENV === <span class="c-str">'development'</span>
+})
+<span class="c-key">module</span>.exports = withPWA({})
+      </div>
+    </div>
+    <div class="card-notes">
+      <strong>PWA:</strong> En desarrollo se deshabilita automáticamente para evitar problemas de cache
+    </div>
+  </div>
+
+  <!-- PASO 4: SUPABASE TABLAS -->
+  <div class="card">
+    <div class="card-header">
+      <div><div class="card-num">F1-04</div><div class="card-name">Supabase — Crear tablas</div></div>
+      <span class="tag tag-required">Requerido</span>
+    </div>
+    <div class="card-body">
+      <div class="code-block">
+<span class="c-comment">-- Ejecutar en Supabase SQL Editor</span>
+<span class="c-comment">-- (copiar SQL completo de la Sección 12</span>
+<span class="c-comment">--  del Design System)</span>
+
+<span class="c-comment">-- Tablas a crear (en orden):</span>
+<span class="c-green">1. agencies</span>     <span class="c-gray">→ agencias clientes</span>
+<span class="c-green">2. users</span>        <span class="c-gray">→ agentes de cada agencia</span>
+<span class="c-green">3. properties</span>   <span class="c-gray">→ catálogo de propiedades</span>
+<span class="c-green">4. leads</span>        <span class="c-gray">→ clientes potenciales</span>
+<span class="c-green">5. conversations</span><span class="c-gray">→ mensajes WhatsApp</span>
+<span class="c-green">6. visits</span>       <span class="c-gray">→ visitas agendadas</span>
+
+<span class="c-comment">-- Habilitar RLS en TODAS las tablas</span>
+ALTER TABLE agencies    ENABLE ROW LEVEL SECURITY;
+ALTER TABLE users       ENABLE ROW LEVEL SECURITY;
+ALTER TABLE properties  ENABLE ROW LEVEL SECURITY;
+ALTER TABLE leads       ENABLE ROW LEVEL SECURITY;
+ALTER TABLE conversations ENABLE ROW LEVEL SECURITY;
+ALTER TABLE visits      ENABLE ROW LEVEL SECURITY;
+
+<span class="c-comment">-- Habilitar pgvector para embeddings del bot</span>
+CREATE EXTENSION IF NOT EXISTS vector;
+      </div>
+    </div>
+    <div class="card-notes">
+      <strong>Dónde:</strong> supabase.com → tu proyecto → SQL Editor → New query<br>
+      <strong>pgvector:</strong> Necesario para que el bot busque propiedades semánticamente
+    </div>
+  </div>
+
+  <!-- PASO 5: AUTH -->
+  <div class="card">
+    <div class="card-header">
+      <div><div class="card-num">F1-05</div><div class="card-name">Supabase Auth + Google OAuth</div></div>
+      <span class="tag tag-required">Requerido</span>
+    </div>
+    <div class="card-body">
+      <div class="code-block">
+<span class="c-comment">// lib/supabase/client.ts — browser</span>
+<span class="c-key">import</span> { createBrowserClient } from <span class="c-str">'@supabase/ssr'</span>
+<span class="c-key">export const</span> supabase = createBrowserClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+)
+
+<span class="c-comment">// lib/supabase/server.ts — Server Components</span>
+<span class="c-key">import</span> { createServerClient } from <span class="c-str">'@supabase/ssr'</span>
+<span class="c-key">import</span> { cookies } from <span class="c-str">'next/headers'</span>
+<span class="c-key">export async function</span> createClient() {
+  <span class="c-key">const</span> cookieStore = cookies()
+  <span class="c-key">return</span> createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    { cookies: { getAll() { return cookieStore.getAll() } } }
+  )
+}
+
+<span class="c-comment">// middleware.ts — proteger rutas</span>
+<span class="c-comment">// /dashboard* → requiere auth</span>
+<span class="c-comment">// /admin*     → requiere super_admin</span>
+      </div>
+    </div>
+    <div class="card-notes">
+      <strong>En Supabase Dashboard:</strong> Authentication → Providers → Google → activar<br>
+      <strong>Magic Link:</strong> ya viene activado por defecto · Email templates en Authentication → Email Templates
+    </div>
+  </div>
+
+  <!-- PASO 6: ENV -->
+  <div class="card">
+    <div class="card-header">
+      <div><div class="card-num">F1-06</div><div class="card-name">Variables de entorno (.env.local)</div></div>
+      <span class="tag tag-required">Requerido</span>
+    </div>
+    <div class="card-body">
+      <div class="code-block">
+<span class="c-comment"># Crear .env.local en raíz del proyecto</span>
+<span class="c-comment"># (Ver Sección 17 del Design System)</span>
+
+<span class="c-comment"># Mínimo para Fase 1:</span>
+<span class="c-key">NEXT_PUBLIC_SUPABASE_URL</span>=<span class="c-str">https://xxx.supabase.co</span>
+<span class="c-key">NEXT_PUBLIC_SUPABASE_ANON_KEY</span>=<span class="c-str">eyJ...</span>
+<span class="c-key">SUPABASE_SERVICE_ROLE_KEY</span>=<span class="c-str">eyJ...</span>
+<span class="c-key">NEXT_PUBLIC_APP_URL</span>=<span class="c-str">http://localhost:3000</span>
+<span class="c-key">SUPER_ADMIN_EMAIL</span>=<span class="c-str">tu@email.com</span>
+
+<span class="c-comment"># Agregar en Fase 5:</span>
+<span class="c-key">ANTHROPIC_API_KEY</span>=<span class="c-str">sk-ant-...</span>
+<span class="c-key">TWILIO_ACCOUNT_SID</span>=<span class="c-str">AC...</span>
+<span class="c-key">TWILIO_AUTH_TOKEN</span>=<span class="c-str">...</span>
+
+<span class="c-comment"># Agregar en Fase 8:</span>
+<span class="c-key">STRIPE_SECRET_KEY</span>=<span class="c-str">sk_test_...</span>
+<span class="c-key">STRIPE_WEBHOOK_SECRET</span>=<span class="c-str">whsec_...</span>
+      </div>
+    </div>
+    <div class="card-notes">
+      <strong>NUNCA</strong> subir .env.local a GitHub — ya está en .gitignore por defecto<br>
+      <strong>Vercel:</strong> Las variables se agregan en Project → Settings → Environment Variables
+    </div>
+  </div>
+
+  <!-- PASO 7: PWA MANIFEST -->
+  <div class="card">
+    <div class="card-header">
+      <div><div class="card-num">F1-07</div><div class="card-name">PWA — manifest.json</div></div>
+      <span class="tag tag-required">Requerido</span>
+    </div>
+    <div class="card-body">
+      <div class="code-block">
+<span class="c-comment">// public/manifest.json</span>
+{
+  <span class="c-key">"name"</span>: <span class="c-str">"InmoIA"</span>,
+  <span class="c-key">"short_name"</span>: <span class="c-str">"InmoIA"</span>,
+  <span class="c-key">"start_url"</span>: <span class="c-str">"/dashboard"</span>,
+  <span class="c-key">"display"</span>: <span class="c-str">"standalone"</span>,
+  <span class="c-key">"orientation"</span>: <span class="c-str">"portrait"</span>,
+  <span class="c-key">"background_color"</span>: <span class="c-str">"#0F0F1A"</span>,
+  <span class="c-key">"theme_color"</span>: <span class="c-str">"#BA7517"</span>,
+  <span class="c-key">"icons"</span>: [
+    { <span class="c-key">"src"</span>: <span class="c-str">"/icons/icon-192.png"</span>,
+      <span class="c-key">"sizes"</span>: <span class="c-str">"192x192"</span> },
+    { <span class="c-key">"src"</span>: <span class="c-str">"/icons/icon-512.png"</span>,
+      <span class="c-key">"sizes"</span>: <span class="c-str">"512x512"</span>,
+      <span class="c-key">"purpose"</span>: <span class="c-str">"any maskable"</span> }
+  ]
+}
+      </div>
+    </div>
+    <div class="card-notes">
+      <strong>Íconos:</strong> Crear 2 PNGs con el logo de InmoIA (puedes usar un emoji 🏡 en fondo ámbar)<br>
+      <strong>iPhone:</strong> Al abrir en Safari → Compartir → Agregar a pantalla inicio → aparece como app nativa
+    </div>
+  </div>
+
+  <!-- PASO 8: ESTRUCTURA DE CARPETAS -->
+  <div class="card">
+    <div class="card-header">
+      <div><div class="card-num">F1-08</div><div class="card-name">Estructura de carpetas</div></div>
+      <span class="tag tag-required">Requerido</span>
+    </div>
+    <div class="card-body">
+      <div class="file-tree">
+<span class="folder">inmoia/</span>
+├── <span class="folder">app/</span>
+│   ├── <span class="folder">(public)/</span>     <span class="c-gray">← sin auth</span>
+│   ├── <span class="folder">(dashboard)/</span>  <span class="c-gray">← con auth</span>
+│   ├── <span class="folder">(admin)/</span>      <span class="c-gray">← super_admin</span>
+│   ├── <span class="folder">api/</span>
+│   │   ├── <span class="folder">webhook/</span>
+│   │   └── <span class="folder">ai/</span>
+│   ├── <span class="important">layout.tsx</span>    <span class="c-gray">← root layout</span>
+│   └── <span class="important">globals.css</span>   <span class="c-gray">← CSS variables</span>
+├── <span class="folder">components/</span>
+│   ├── <span class="folder">ui/</span>           <span class="c-gray">← componentes base</span>
+│   ├── <span class="folder">layout/</span>       <span class="c-gray">← sidebar, topbar</span>
+│   └── <span class="folder">shared/</span>
+├── <span class="folder">lib/</span>
+│   ├── <span class="folder">supabase/</span>     <span class="c-gray">← client + server</span>
+│   ├── <span class="folder">ai/</span>           <span class="c-gray">← claude.ts</span>
+│   └── <span class="folder">utils/</span>
+├── <span class="folder">types/</span>         <span class="c-gray">← TypeScript types</span>
+├── <span class="folder">hooks/</span>         <span class="c-gray">← custom hooks</span>
+├── <span class="important">middleware.ts</span>  <span class="c-gray">← protección rutas</span>
+└── <span class="important">.env.local</span>    <span class="c-gray">← nunca a GitHub</span>
+      </div>
+    </div>
+    <div class="card-notes">
+      <strong>Ver Sección 16 del Design System</strong> para el árbol completo con todos los archivos<br>
+      <strong>Claude Code:</strong> Pedirle que cree esta estructura al inicio de la sesión
+    </div>
+  </div>
+
+  <!-- CHECKLIST FASE 1 -->
+  <div class="card" style="grid-column: 1 / -1">
+    <div class="card-header">
+      <div><div class="card-num">F1-CHECK</div><div class="card-name">Checklist de la Fase 1 — completa estos antes de pasar a la Fase 2</div></div>
+    </div>
+    <div class="card-body">
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px;">
+        <div class="checklist">
+          <div class="check-item"><div class="check-box"></div>Node.js 20+ instalado (<code>node --version</code>)</div>
+          <div class="check-item"><div class="check-box"></div>VS Code + extensión Claude Code instalada</div>
+          <div class="check-item"><div class="check-box"></div>Proyecto Next.js creado (<code>npm run dev</code> funciona)</div>
+          <div class="check-item"><div class="check-box"></div>globals.css con todas las variables CSS</div>
+          <div class="check-item"><div class="check-box"></div>Fuente Sora cargando en el browser</div>
+          <div class="check-item"><div class="check-box"></div>Tailwind funcionando (clase text-red-500 visible)</div>
+          <div class="check-item"><div class="check-box"></div>next.config.ts con next-pwa configurado</div>
+          <div class="check-item"><div class="check-box"></div>public/manifest.json creado</div>
+        </div>
+        <div class="checklist">
+          <div class="check-item"><div class="check-box"></div>Cuenta Supabase creada → nuevo proyecto</div>
+          <div class="check-item"><div class="check-box"></div>6 tablas creadas en Supabase SQL Editor</div>
+          <div class="check-item"><div class="check-box"></div>RLS habilitado en todas las tablas</div>
+          <div class="check-item"><div class="check-box"></div>pgvector activado (<code>CREATE EXTENSION vector</code>)</div>
+          <div class="check-item"><div class="check-box"></div>Google OAuth configurado en Supabase Auth</div>
+          <div class="check-item"><div class="check-box"></div>.env.local creado con keys de Supabase</div>
+          <div class="check-item"><div class="check-box"></div>lib/supabase/client.ts y server.ts creados</div>
+          <div class="check-item"><div class="check-box"></div>middleware.ts protegiendo /dashboard y /admin</div>
+        </div>
+      </div>
+    </div>
+    <div class="card-notes">
+      <strong>Cuando todo esté ✓</strong> → pasar a Fase 2 (Layout y componentes UI)
+    </div>
+  </div>
+
+</div>
+
+<div style="margin-top:32px;padding:16px 20px;background:rgba(255,255,255,0.02);border-radius:10px;border:0.5px solid rgba(255,255,255,0.06);font-size:11px;color:rgba(255,255,255,0.3);text-align:center">
+  <a href="INDEX.html" style="color:#BA7517;text-decoration:none">← Índice</a>
+  &nbsp;·&nbsp;
+  <a href="fase2-layout.html" style="color:#BA7517;text-decoration:none">Fase 2: Layout →</a>
+</div>
+
+</body>
+</html>

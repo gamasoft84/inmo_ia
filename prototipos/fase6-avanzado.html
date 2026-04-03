@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>InmoIA · Fase 6 — Funciones Avanzadas</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #0f0f1a; color: #fff; padding: 32px 20px; }
+  .nav { display: flex; align-items: center; gap: 12px; margin-bottom: 32px; }
+  .back { color: #BA7517; text-decoration: none; font-size: 12px; }
+  .phase-title { font-size: 22px; font-weight: 500; }
+  .phase-sub { font-size: 13px; color: rgba(255,255,255,0.4); margin-top: 4px; margin-bottom: 32px; }
+  .screens { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 20px; }
+  .screen-block { background: rgba(255,255,255,0.03); border: 0.5px solid rgba(255,255,255,0.08); border-radius: 12px; overflow: hidden; }
+  .screen-header { padding: 12px 16px; border-bottom: 0.5px solid rgba(255,255,255,0.06); display: flex; align-items: center; justify-content: space-between; }
+  .screen-num { font-size: 10px; color: #BA7517; font-weight: 600; letter-spacing: 0.05em; }
+  .screen-name { font-size: 12px; font-weight: 500; }
+  .screen-route { font-size: 10px; color: rgba(255,255,255,0.3); font-family: monospace; }
+  .screen-preview { padding: 14px; }
+  .screen-notes { padding: 10px 14px; background: rgba(186,117,23,0.06); border-top: 0.5px solid rgba(186,117,23,0.15); font-size: 10px; color: rgba(255,255,255,0.4); line-height: 1.6; }
+  .screen-notes strong { color: #BA7517; }
+
+  /* CALENDARIO */
+  .cal { background: #fff; border-radius: 8px; overflow: hidden; }
+  .cal-header { background: #F7F6F3; padding: 8px 12px; display: flex; align-items: center; justify-content: space-between; border-bottom: 0.5px solid #EBEBEB; }
+  .cal-title { font-size: 12px; font-weight: 500; color: #1A1A2E; }
+  .cal-grid { display: grid; grid-template-columns: 60px repeat(5,1fr); }
+  .cal-time { font-size: 8px; color: #9090A8; text-align: right; padding: 6px 6px 0; border-bottom: 0.5px solid #EBEBEB; }
+  .cal-cell { border-right: 0.5px solid #EBEBEB; border-bottom: 0.5px solid #EBEBEB; min-height: 24px; position: relative; }
+  .cal-event { margin: 2px; border-radius: 3px; padding: 2px 4px; font-size: 8px; font-weight: 500; }
+  .cal-event.confirmed { background: #EAF3DE; color: #3B6D11; }
+  .cal-event.pending { background: #FAEEDA; color: #854F0B; }
+  .cal-event.cancelled { background: #FCEBEB; color: #A32D2D; text-decoration: line-through; }
+  .cal-day-label { padding: 6px 8px; font-size: 9px; color: #9090A8; text-align: center; border-right: 0.5px solid #EBEBEB; border-bottom: 0.5px solid #EBEBEB; }
+  .cal-day-label.today { color: #fff; background: #BA7517; font-weight: 600; }
+
+  /* REPORTES */
+  .report { background: #fff; border-radius: 8px; overflow: hidden; }
+  .report-tabs { display: flex; border-bottom: 0.5px solid #EBEBEB; padding: 0 12px; }
+  .report-tab { padding: 6px 10px; font-size: 9px; color: #9090A8; border-bottom: 2px solid transparent; }
+  .report-tab.active { color: #854F0B; border-bottom-color: #BA7517; font-weight: 500; }
+  .report-stats { display: grid; grid-template-columns: repeat(4,1fr); gap: 6px; padding: 10px 12px; }
+  .report-stat { background: #F7F6F3; border-radius: 6px; padding: 8px; }
+  .report-stat-val { font-size: 18px; font-weight: 500; color: #BA7517; }
+  .report-stat-label { font-size: 7px; color: #9090A8; letter-spacing: 0.04em; }
+  .report-bar { padding: 0 12px 10px; }
+  .report-bar-row { margin-bottom: 6px; }
+  .report-bar-meta { display: flex; justify-content: space-between; font-size: 9px; color: #4A4A6A; margin-bottom: 2px; }
+  .report-bar-track { height: 4px; background: #EBEBEB; border-radius: 2px; overflow: hidden; }
+  .report-bar-fill { height: 100%; background: #BA7517; border-radius: 2px; }
+
+  /* NOTIFICACIONES */
+  .notifs { background: #fff; border-radius: 8px; overflow: hidden; }
+  .notif-item { display: flex; gap: 8px; padding: 8px 12px; border-bottom: 0.5px solid #EBEBEB; }
+  .notif-item.unread { background: #FAEEDA22; border-left: 2px solid #BA7517; }
+  .notif-icon { width: 28px; height: 28px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 13px; flex-shrink: 0; }
+  .notif-title { font-size: 10px; font-weight: 500; color: #1A1A2E; }
+  .notif-body { font-size: 9px; color: #9090A8; line-height: 1.4; }
+  .notif-unread-dot { width: 7px; height: 7px; border-radius: 50%; background: #BA7517; flex-shrink: 0; margin-top: 4px; }
+
+  /* VISITA STEPS */
+  .visit-steps { background: #F7F6F3; border-radius: 8px; padding: 12px; }
+  .v-steps-row { display: flex; align-items: center; gap: 4px; margin-bottom: 12px; }
+  .v-step-num { width: 22px; height: 22px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 9px; font-weight: 600; flex-shrink: 0; }
+  .v-step-num.done { background: #EAF3DE; color: #3B6D11; border: 1.5px solid #C0DD97; }
+  .v-step-num.active { background: #BA7517; color: #fff; }
+  .v-step-num.pending { background: #f0f0f0; color: #9090A8; border: 1.5px solid #D4D0C8; }
+  .v-step-line { flex: 1; height: 1px; background: #D4D0C8; }
+  .v-step-line.done { background: #C0DD97; }
+  .v-cal { display: grid; grid-template-columns: repeat(7,1fr); gap: 3px; }
+  .v-day { aspect-ratio: 1; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 10px; color: #4A4A6A; cursor: pointer; }
+  .v-day.selected { background: #BA7517; color: #fff; font-weight: 600; }
+  .v-day.today { background: #FAEEDA; color: #854F0B; font-weight: 600; }
+  .v-times { display: grid; grid-template-columns: repeat(3,1fr); gap: 4px; margin-top: 8px; }
+  .v-time { padding: 5px; border: 1.5px solid #D4D0C8; border-radius: 6px; text-align: center; font-size: 9px; cursor: pointer; color: #4A4A6A; }
+  .v-time.selected { background: #BA7517; border-color: #BA7517; color: #fff; font-weight: 500; }
+  .v-time.busy { background: #f0f0f0; color: #9090A8; text-decoration: line-through; }
+
+  /* COMPARAR PROPS */
+  .compare { background: #fff; border-radius: 8px; overflow: hidden; }
+  .compare-th { font-size: 9px; color: #9090A8; padding: 6px 10px; background: #F7F6F3; border-right: 0.5px solid #EBEBEB; }
+  .compare-prop { padding: 8px 10px; border-right: 0.5px solid #EBEBEB; vertical-align: top; }
+  .compare-prop-img { height: 50px; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 24px; margin-bottom: 4px; }
+  .compare-prop-name { font-size: 10px; font-weight: 500; color: #1A1A2E; }
+  .compare-prop-price { font-size: 11px; font-weight: 500; color: #854F0B; }
+  .compare-winner { background: #FAEEDA; border: 1.5px solid #BA7517; }
+  .compare-td { padding: 6px 10px; border-bottom: 0.5px solid #EBEBEB; border-right: 0.5px solid #EBEBEB; font-size: 10px; }
+  .compare-best { color: #3B6D11; font-weight: 600; }
+  .compare-worst { color: #A32D2D; }
+
+  /* PDF EXPORT */
+  .pdf-preview { background: #fff; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+  .pdf-header { background: #0f0f1a; padding: 10px 14px; display: flex; justify-content: space-between; align-items: center; }
+  .pdf-logo { font-size: 12px; font-weight: 500; color: #BA7517; }
+  .pdf-info { text-align: right; font-size: 8px; color: rgba(255,255,255,0.4); }
+  .pdf-accent { height: 3px; background: #BA7517; }
+  .pdf-body { padding: 10px 14px; }
+  .pdf-title { font-size: 13px; font-weight: 500; color: #1A1A2E; margin-bottom: 8px; }
+  .pdf-stats { display: grid; grid-template-columns: repeat(4,1fr); gap: 5px; margin-bottom: 8px; }
+  .pdf-stat { background: #F7F6F3; border-radius: 5px; padding: 6px; border: 0.5px solid #EBEBEB; text-align: center; }
+  .pdf-stat-val { font-size: 14px; font-weight: 500; color: #BA7517; }
+  .pdf-stat-label { font-size: 7px; color: #9090A8; }
+</style>
+</head>
+<body>
+
+<div class="nav">
+  <a href="INDEX.html" class="back">← Índice</a>
+  <span style="color:rgba(255,255,255,0.2)">|</span>
+  <span style="font-size:11px;color:rgba(255,255,255,0.3)">FASE 6</span>
+</div>
+
+<div class="phase-title">📊 Funciones Avanzadas</div>
+<div class="phase-sub">Calendario, Reportes, Notificaciones, Comparar, PDF</div>
+
+<div class="screens">
+
+  <!-- CALENDARIO -->
+  <div class="screen-block">
+    <div class="screen-header">
+      <div><div class="screen-num">F6-01</div><div class="screen-name">Calendario de Visitas</div></div>
+      <div class="screen-route">/calendario</div>
+    </div>
+    <div class="screen-preview">
+      <div class="cal">
+        <div class="cal-header">
+          <div class="cal-title">Abril 2026</div>
+          <div style="font-size:10px;color:#9090A8">4 visitas · 1 cancelada</div>
+        </div>
+        <table style="width:100%;border-collapse:collapse">
+          <tr>
+            <td class="cal-time"></td>
+            <td class="cal-day-label">LUN 30</td>
+            <td class="cal-day-label today">MAR 1</td>
+            <td class="cal-day-label">MIÉ 2</td>
+            <td class="cal-day-label">JUE 3</td>
+            <td class="cal-day-label">VIE 4</td>
+          </tr>
+          <tr>
+            <td class="cal-time">10am</td>
+            <td class="cal-cell"></td>
+            <td class="cal-cell"><div class="cal-event confirmed">Carlos M. · Casa Coyoacán</div></td>
+            <td class="cal-cell"></td>
+            <td class="cal-cell"></td>
+            <td class="cal-cell"><div class="cal-event cancelled">Jorge R. (cancelada)</div></td>
+          </tr>
+          <tr>
+            <td class="cal-time">11am</td>
+            <td class="cal-cell"></td>
+            <td class="cal-cell"></td>
+            <td class="cal-cell"><div class="cal-event pending">Roberto S. · Huatulco</div></td>
+            <td class="cal-cell"></td>
+            <td class="cal-cell"></td>
+          </tr>
+          <tr>
+            <td class="cal-time">3pm</td>
+            <td class="cal-cell"></td>
+            <td class="cal-cell"><div class="cal-event confirmed">Ana T. · Depto SF</div></td>
+            <td class="cal-cell"></td>
+            <td class="cal-cell"><div class="cal-event pending">María L. · Pedregal</div></td>
+            <td class="cal-cell"></td>
+          </tr>
+        </table>
+        <div style="padding:6px 12px;background:#F7F6F3;display:flex;gap:10px;font-size:9px;color:#9090A8;border-top:0.5px solid #EBEBEB">
+          <span style="display:flex;align-items:center;gap:3px"><span style="width:8px;height:8px;border-radius:2px;background:#EAF3DE;display:inline-block"></span>Confirmada</span>
+          <span style="display:flex;align-items:center;gap:3px"><span style="width:8px;height:8px;border-radius:2px;background:#FAEEDA;display:inline-block"></span>Pendiente</span>
+          <span style="display:flex;align-items:center;gap:3px"><span style="width:8px;height:8px;border-radius:2px;background:#FCEBEB;display:inline-block"></span>Cancelada</span>
+        </div>
+      </div>
+    </div>
+    <div class="screen-notes">
+      <strong>Incluye:</strong> Mini calendario lateral + Lista de próximas visitas + Panel de detalle al clic<br>
+      <strong>Toca un evento</strong> para ver nombre, propiedad, hora, agente y botones de acción
+    </div>
+  </div>
+
+  <!-- AGENDAR VISITA -->
+  <div class="screen-block">
+    <div class="screen-header">
+      <div><div class="screen-num">F6-02</div><div class="screen-name">Agendar Visita</div></div>
+      <div class="screen-route">Modal / flujo 5 pasos</div>
+    </div>
+    <div class="screen-preview">
+      <div class="visit-steps">
+        <div class="v-steps-row">
+          <div class="v-step-num done">✓</div><div class="v-step-line done"></div>
+          <div class="v-step-num active">2</div><div class="v-step-line"></div>
+          <div class="v-step-num pending">3</div><div class="v-step-line"></div>
+          <div class="v-step-num pending">4</div><div class="v-step-line"></div>
+          <div class="v-step-num pending">5</div>
+        </div>
+        <div style="font-size:10px;font-weight:500;color:#1A1A2E;margin-bottom:8px">Selecciona la fecha</div>
+        <div class="v-cal">
+          <div style="font-size:8px;color:#9090A8;text-align:center">L</div><div style="font-size:8px;color:#9090A8;text-align:center">M</div><div style="font-size:8px;color:#9090A8;text-align:center">M</div><div style="font-size:8px;color:#9090A8;text-align:center">J</div><div style="font-size:8px;color:#9090A8;text-align:center">V</div><div style="font-size:8px;color:#9090A8;text-align:center">S</div><div style="font-size:8px;color:#9090A8;text-align:center">D</div>
+          <div class="v-day">30</div><div class="v-day today">1</div><div class="v-day selected">2</div><div class="v-day">3</div><div class="v-day">4</div><div class="v-day">5</div><div class="v-day" style="color:#D4D0C8">6</div>
+        </div>
+        <div class="v-times">
+          <div class="v-time busy">9am<br><span style="font-size:7px">Ocupado</span></div>
+          <div class="v-time selected">10am<br><span style="font-size:7px">Libre</span></div>
+          <div class="v-time">11am</div>
+          <div class="v-time">12pm</div>
+          <div class="v-time busy">1pm<br><span style="font-size:7px">Ocupado</span></div>
+          <div class="v-time">3pm</div>
+        </div>
+      </div>
+    </div>
+    <div class="screen-notes">
+      <strong>5 pasos:</strong> Lead → Fecha/hora → Agente → Confirmar (preview WhatsApp) → Éxito<br>
+      <strong>Al confirmar:</strong> WhatsApp automático al lead + evento en calendario + recordatorio D-1
+    </div>
+  </div>
+
+  <!-- REPORTES -->
+  <div class="screen-block">
+    <div class="screen-header">
+      <div><div class="screen-num">F6-03</div><div class="screen-name">Reportes y Analítica</div></div>
+      <div class="screen-route">/reportes</div>
+    </div>
+    <div class="screen-preview">
+      <div class="report">
+        <div class="report-tabs">
+          <div class="report-tab active">Leads</div>
+          <div class="report-tab">Propiedades</div>
+          <div class="report-tab">Chatbot</div>
+          <div class="report-tab">ROI</div>
+        </div>
+        <div class="report-stats">
+          <div class="report-stat"><div class="report-stat-val">487</div><div class="report-stat-label">LEADS TOTAL</div></div>
+          <div class="report-stat"><div class="report-stat-val">83%</div><div class="report-stat-label">AUTOMÁTICOS</div></div>
+          <div class="report-stat"><div class="report-stat-val">89</div><div class="report-stat-label">VISITAS</div></div>
+          <div class="report-stat"><div class="report-stat-val">33x</div><div class="report-stat-label">ROI</div></div>
+        </div>
+        <div class="report-bar">
+          <div class="report-bar-row"><div class="report-bar-meta"><span>WhatsApp bot</span><span>59%</span></div><div class="report-bar-track"><div class="report-bar-fill" style="width:59%"></div></div></div>
+          <div class="report-bar-row"><div class="report-bar-meta"><span>Inmuebles24</span><span>30%</span></div><div class="report-bar-track"><div class="report-bar-fill" style="width:30%"></div></div></div>
+          <div class="report-bar-row"><div class="report-bar-meta"><span>Referidos</span><span>11%</span></div><div class="report-bar-track"><div class="report-bar-fill" style="width:11%"></div></div></div>
+        </div>
+      </div>
+    </div>
+    <div class="screen-notes">
+      <strong>4 tabs:</strong> Leads (embudo + fuentes) · Propiedades (ranking) · Chatbot (actividad por hora) · ROI (gráfica 6 meses)<br>
+      <strong>Filtros:</strong> Por período y por agente
+    </div>
+  </div>
+
+  <!-- NOTIFICACIONES -->
+  <div class="screen-block">
+    <div class="screen-header">
+      <div><div class="screen-num">F6-04</div><div class="screen-name">Notificaciones en Tiempo Real</div></div>
+      <div class="screen-route">/notificaciones</div>
+    </div>
+    <div class="screen-preview">
+      <div class="notifs">
+        <div style="padding:8px 12px;background:#F7F6F3;border-bottom:0.5px solid #EBEBEB;display:flex;align-items:center;gap:8px">
+          <span style="font-size:11px;font-weight:500;color:#1A1A2E">Notificaciones</span>
+          <span style="background:#A32D2D;color:#fff;font-size:9px;font-weight:600;padding:1px 6px;border-radius:20px">5</span>
+          <div style="display:flex;gap:4px;margin-left:auto">
+            <div style="padding:3px 8px;border-radius:20px;font-size:9px;border:1.5px solid #BA7517;background:#FAEEDA;color:#854F0B">🔥 Leads</div>
+            <div style="padding:3px 8px;border-radius:20px;font-size:9px;border:1.5px solid #D4D0C8;color:#9090A8">📅 Visitas</div>
+          </div>
+        </div>
+        <div class="notif-item unread">
+          <div class="notif-icon" style="background:#FCEBEB">🔥</div>
+          <div style="flex:1"><div class="notif-title">Nuevo lead caliente</div><div class="notif-body">Carlos Mendoza · Casa Coyoacán · Score 87/100</div></div>
+          <div class="notif-unread-dot"></div>
+        </div>
+        <div class="notif-item unread">
+          <div class="notif-icon" style="background:#FAEEDA">💬</div>
+          <div style="flex:1"><div class="notif-title">El bot necesita tu ayuda</div><div class="notif-body">Ana Torres espera 3 min · Pregunta sobre Fovissste</div></div>
+          <div class="notif-unread-dot"></div>
+        </div>
+        <div class="notif-item">
+          <div class="notif-icon" style="background:#EAF3DE">📅</div>
+          <div style="flex:1"><div class="notif-title">Visita agendada automáticamente</div><div class="notif-body">Roberto Silva · Terreno Huatulco · Mañana 11am</div></div>
+        </div>
+      </div>
+    </div>
+    <div class="screen-notes">
+      <strong>Realtime:</strong> Supabase Realtime — actualizaciones instantáneas sin refrescar<br>
+      <strong>Tipos:</strong> Lead caliente · Bot escala · Visita agendada · Pago · Sistema
+    </div>
+  </div>
+
+  <!-- COMPARAR PROPIEDADES -->
+  <div class="screen-block">
+    <div class="screen-header">
+      <div><div class="screen-num">F6-05</div><div class="screen-name">Comparar Propiedades</div></div>
+      <div class="screen-route">/propiedades?compare=true</div>
+    </div>
+    <div class="screen-preview">
+      <div class="compare">
+        <table style="width:100%;border-collapse:collapse">
+          <tr>
+            <td class="compare-th" style="width:100px">PROPIEDAD</td>
+            <td class="compare-prop compare-winner">
+              <div class="compare-prop-img" style="background:linear-gradient(135deg,#8B7355,#C4A882)">🏡</div>
+              <div class="compare-prop-name">Casa Coyoacán</div>
+              <div class="compare-prop-price">$5,800,000</div>
+              <div style="font-size:8px;color:#BA7517;font-weight:600;margin-top:2px">⭐ Recomendada</div>
+            </td>
+            <td class="compare-prop">
+              <div class="compare-prop-img" style="background:linear-gradient(135deg,#6b3fa0,#9b6fd4)">🏙️</div>
+              <div class="compare-prop-name">Depto Condesa</div>
+              <div class="compare-prop-price">$4,500,000</div>
+            </td>
+            <td class="compare-prop">
+              <div class="compare-prop-img" style="background:linear-gradient(135deg,#1a5f7a,#2d9cbb)">🌊</div>
+              <div class="compare-prop-name">Terreno Huatulco</div>
+              <div class="compare-prop-price">$2,800,000</div>
+            </td>
+          </tr>
+          <tr><td class="compare-th">Precio/m²</td><td class="compare-td"><span class="compare-best">$27,619 ↓</span></td><td class="compare-td">$34,615</td><td class="compare-td">$5,600</td></tr>
+          <tr><td class="compare-th">Leads</td><td class="compare-td"><span class="compare-best">15 ↑</span></td><td class="compare-td">9</td><td class="compare-td">8</td></tr>
+          <tr><td class="compare-th">Score IA</td><td class="compare-td"><span class="compare-best">82/100</span></td><td class="compare-td">71/100</td><td class="compare-td">68/100</td></tr>
+          <tr><td class="compare-th">Jardín</td><td class="compare-td" style="color:#3B6D11">✓</td><td class="compare-td" style="color:#A32D2D">✕</td><td class="compare-td" style="color:#3B6D11">✓</td></tr>
+        </table>
+      </div>
+    </div>
+    <div class="screen-notes">
+      <strong>5 secciones:</strong> Precio/valor · Características · Amenidades · Legal · Performance<br>
+      <strong>IA:</strong> Botón "✦ Análisis completo" genera recomendación para el comprador
+    </div>
+  </div>
+
+  <!-- EXPORTAR PDF -->
+  <div class="screen-block">
+    <div class="screen-header">
+      <div><div class="screen-num">F6-06</div><div class="screen-name">Exportar Reportes PDF</div></div>
+      <div class="screen-route">/reportes → exportar</div>
+    </div>
+    <div class="screen-preview">
+      <div class="pdf-preview">
+        <div class="pdf-header">
+          <div><div class="pdf-logo">InmoIA</div><div style="font-size:7px;color:rgba(255,255,255,0.3);letter-spacing:0.06em">REPORTE DE DESEMPEÑO</div></div>
+          <div class="pdf-info"><div>Agencia Aguilar</div><div>Ene–Mar 2026</div></div>
+        </div>
+        <div class="pdf-accent"></div>
+        <div class="pdf-body">
+          <div class="pdf-title">Resumen ejecutivo — Q1 2026</div>
+          <div class="pdf-stats">
+            <div class="pdf-stat"><div class="pdf-stat-val">487</div><div class="pdf-stat-label">LEADS</div></div>
+            <div class="pdf-stat"><div class="pdf-stat-val">83%</div><div class="pdf-stat-label">BOT AUTO</div></div>
+            <div class="pdf-stat"><div class="pdf-stat-val">89</div><div class="pdf-stat-label">VISITAS</div></div>
+            <div class="pdf-stat"><div class="pdf-stat-val">33x</div><div class="pdf-stat-label">ROI</div></div>
+          </div>
+          <div style="font-size:8px;color:#9090A8;text-align:center;margin-top:4px">Generado por InmoIA · 1 de abril 2026 · Página 1 de 2</div>
+        </div>
+      </div>
+    </div>
+    <div class="screen-notes">
+      <strong>Sidebar de config:</strong> Período · Agente · Secciones a incluir (checkboxes) · Idioma · Formato PDF/Excel<br>
+      <strong>Preview:</strong> El documento se ve igual que el PDF final antes de descargar
+    </div>
+  </div>
+
+</div>
+
+<div style="margin-top:32px;padding:16px 20px;background:rgba(255,255,255,0.02);border-radius:10px;border:0.5px solid rgba(255,255,255,0.06);font-size:11px;color:rgba(255,255,255,0.3);text-align:center">
+  <a href="fase5-chatbot.html" style="color:#BA7517;text-decoration:none">← Fase 5: Chatbot</a>
+  &nbsp;·&nbsp;
+  <a href="INDEX.html" style="color:#BA7517;text-decoration:none">Índice</a>
+  &nbsp;·&nbsp;
+  <a href="fase7-config.html" style="color:#BA7517;text-decoration:none">Fase 7: Config →</a>
+</div>
+
+</body>
+</html>

@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>InmoIA · Fase 5 — Chatbot WhatsApp ⭐</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #0f0f1a; color: #fff; padding: 32px 20px; }
+  .nav { display: flex; align-items: center; gap: 12px; margin-bottom: 32px; }
+  .back { color: #BA7517; text-decoration: none; font-size: 12px; }
+  .phase-title { font-size: 22px; font-weight: 500; }
+  .phase-sub { font-size: 13px; color: rgba(255,255,255,0.4); margin-top: 4px; margin-bottom: 12px; }
+  .priority-banner { background: rgba(186,117,23,0.1); border: 0.5px solid rgba(186,117,23,0.3); border-radius: 8px; padding: 12px 16px; font-size: 12px; color: rgba(255,255,255,0.6); margin-bottom: 24px; line-height: 1.6; }
+  .priority-banner strong { color: #BA7517; }
+  .screens { display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: 24px; }
+  .screen-block { background: rgba(255,255,255,0.03); border: 0.5px solid rgba(255,255,255,0.08); border-radius: 12px; overflow: hidden; }
+  .screen-block.priority { border-color: rgba(186,117,23,0.4); }
+  .screen-header { padding: 14px 16px; border-bottom: 0.5px solid rgba(255,255,255,0.06); display: flex; align-items: center; justify-content: space-between; }
+  .screen-num { font-size: 10px; color: #BA7517; font-weight: 600; letter-spacing: 0.05em; }
+  .screen-name { font-size: 13px; font-weight: 500; }
+  .screen-route { font-size: 10px; color: rgba(255,255,255,0.3); font-family: monospace; }
+  .screen-preview { padding: 16px; }
+  .screen-notes { padding: 12px 16px; background: rgba(186,117,23,0.06); border-top: 0.5px solid rgba(186,117,23,0.15); font-size: 11px; color: rgba(255,255,255,0.4); line-height: 1.6; }
+  .screen-notes strong { color: #BA7517; }
+
+  /* CONVERSACIONES */
+  .chat-list { background: #fff; border-radius: 8px; overflow: hidden; }
+  .chat-list-top { padding: 8px 12px; background: #F7F6F3; border-bottom: 0.5px solid #EBEBEB; display: flex; align-items: center; gap: 8px; }
+  .chat-list-title { font-size: 12px; font-weight: 500; color: #1A1A2E; flex: 1; }
+  .chat-status { background: #EAF3DE; color: #3B6D11; font-size: 9px; font-weight: 600; padding: 2px 7px; border-radius: 20px; }
+  .chat-item { display: flex; gap: 8px; padding: 8px 12px; border-bottom: 0.5px solid #EBEBEB; cursor: pointer; }
+  .chat-item:hover { background: #F7F6F3; }
+  .chat-item.unread { background: #FAEEDA22; border-left: 2px solid #BA7517; }
+  .chat-av { width: 28px; height: 28px; border-radius: 50%; background: #25D366; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 700; color: #fff; flex-shrink: 0; }
+  .chat-name { font-size: 11px; font-weight: 500; color: #1A1A2E; }
+  .chat-msg { font-size: 9px; color: #9090A8; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 160px; }
+  .chat-time { font-size: 9px; color: #9090A8; margin-left: auto; }
+  .chat-unread-dot { width: 8px; height: 8px; border-radius: 50%; background: #BA7517; flex-shrink: 0; margin-top: 4px; }
+
+  /* CONVERSACIÓN WA */
+  .wa-view { border-radius: 8px; overflow: hidden; }
+  .wa-header { background: #075E54; padding: 8px 12px; display: flex; align-items: center; gap: 8px; }
+  .wa-av { width: 26px; height: 26px; border-radius: 50%; background: #25D366; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; color: #fff; }
+  .wa-name { font-size: 11px; font-weight: 500; color: #fff; }
+  .wa-status { font-size: 9px; color: rgba(255,255,255,0.6); }
+  .wa-bot-status { background: rgba(255,255,255,0.1); padding: 4px 8px; display: flex; align-items: center; gap: 6px; }
+  .wa-bot-dot { width: 6px; height: 6px; border-radius: 50%; background: #25D366; }
+  .wa-bot-label { font-size: 9px; color: rgba(255,255,255,0.6); flex: 1; }
+  .wa-msgs { background: #ECE5DD; padding: 8px 10px; display: flex; flex-direction: column; gap: 5px; }
+  .bubble { max-width: 80%; padding: 6px 10px; font-size: 10px; line-height: 1.5; border-radius: 10px; }
+  .bubble.bot    { background: #fff; border-radius: 2px 10px 10px 10px; align-self: flex-start; color: #1a1a1a; }
+  .bubble.client { background: #DCF8C6; border-radius: 10px 2px 10px 10px; align-self: flex-end; color: #1a1a1a; }
+  .bubble-time   { font-size: 8px; color: #9090a8; margin-top: 2px; }
+  .wa-input { background: #F0F0F0; padding: 6px 10px; display: flex; gap: 6px; align-items: center; }
+  .wa-input-box { flex: 1; border: none; border-radius: 20px; padding: 5px 12px; font-size: 10px; background: #fff; }
+  .wa-send { width: 26px; height: 26px; border-radius: 50%; background: #075E54; border: none; color: #fff; font-size: 12px; cursor: pointer; }
+
+  /* CONFIGURACIÓN BOT */
+  .bot-config { background: #fff; border-radius: 8px; overflow: hidden; }
+  .bot-config-top { background: #F7F6F3; padding: 8px 12px; border-bottom: 0.5px solid #EBEBEB; }
+  .bot-config-title { font-size: 12px; font-weight: 500; color: #1A1A2E; }
+  .bot-tabs { display: flex; border-bottom: 0.5px solid #EBEBEB; padding: 0 12px; }
+  .bot-tab { padding: 6px 10px; font-size: 9px; color: #9090A8; border-bottom: 2px solid transparent; }
+  .bot-tab.active { color: #854F0B; border-bottom-color: #BA7517; font-weight: 500; }
+  .bot-body { padding: 10px 12px; }
+  .bot-field-label { font-size: 9px; color: #9090A8; margin-bottom: 3px; letter-spacing: 0.03em; }
+  .bot-input { width: 100%; border: 0.5px solid #D4D0C8; border-radius: 6px; padding: 5px 8px; font-size: 10px; color: #1A1A2E; margin-bottom: 8px; }
+  .bot-row { display: flex; align-items: center; justify-content: space-between; padding: 6px 0; border-bottom: 0.5px solid #EBEBEB; }
+  .bot-row-label { font-size: 10px; color: #1A1A2E; }
+  .bot-toggle { width: 32px; height: 18px; border-radius: 9px; background: #BA7517; position: relative; cursor: pointer; }
+  .bot-toggle-knob { position: absolute; top: 2px; right: 2px; width: 14px; height: 14px; border-radius: 50%; background: #fff; }
+  .bot-toggle.off { background: #D4D0C8; }
+  .bot-toggle.off .bot-toggle-knob { right: auto; left: 2px; }
+
+  /* FLUJO CLAUDE */
+  .flow-box { background: rgba(255,255,255,0.03); border: 0.5px solid rgba(255,255,255,0.08); border-radius: 8px; padding: 14px; }
+  .flow-step { display: flex; gap: 10px; margin-bottom: 10px; }
+  .flow-step:last-child { margin-bottom: 0; }
+  .flow-num { width: 20px; height: 20px; border-radius: 50%; background: #BA7517; color: #fff; font-size: 9px; font-weight: 700; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .flow-text { font-size: 11px; color: rgba(255,255,255,0.6); line-height: 1.5; }
+  .flow-text strong { color: #fff; }
+  .flow-text span { color: #BA7517; }
+</style>
+</head>
+<body>
+
+<div class="nav">
+  <a href="INDEX.html" class="back">← Índice</a>
+  <span style="color:rgba(255,255,255,0.2)">|</span>
+  <span style="font-size:11px;color:rgba(255,255,255,0.3)">FASE 5</span>
+</div>
+
+<div class="phase-title">💬 Chatbot WhatsApp ⭐</div>
+<div class="phase-sub">El corazón de InmoIA — construir en la Semana 5-6</div>
+
+<div class="priority-banner">
+  <strong>⭐ FASE PRIORITARIA:</strong> El chatbot es el diferenciador principal de InmoIA. Sin él, el producto no tiene sentido.<br>
+  <strong>Orden de construcción:</strong> 1) Webhook Twilio → 2) Bot handler con Claude API → 3) Embeddings pgvector → 4) Vista de conversaciones → 5) Configuración del bot
+</div>
+
+<div class="screens">
+
+  <!-- LISTA DE CONVERSACIONES -->
+  <div class="screen-block priority">
+    <div class="screen-header">
+      <div><div class="screen-num">F5-01</div><div class="screen-name">Lista de Conversaciones</div></div>
+      <div class="screen-route">/chatbot</div>
+    </div>
+    <div class="screen-preview">
+      <div class="chat-list">
+        <div class="chat-list-top">
+          <div class="chat-list-title">Chatbot Sofía</div>
+          <div class="chat-status">🤖 Activo</div>
+        </div>
+        <div class="chat-item unread">
+          <div class="chat-av">C</div>
+          <div style="flex:1;min-width:0">
+            <div class="chat-name">Carlos Mendoza</div>
+            <div class="chat-msg">¿Cuándo puedo ver la casa?</div>
+          </div>
+          <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px">
+            <div class="chat-time">5 min</div>
+            <div class="chat-unread-dot"></div>
+          </div>
+        </div>
+        <div class="chat-item unread">
+          <div class="chat-av" style="background:#185FA5">A</div>
+          <div style="flex:1;min-width:0">
+            <div class="chat-name">Ana Torres</div>
+            <div class="chat-msg">Me interesa el depto de Santa Fe</div>
+          </div>
+          <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px">
+            <div class="chat-time">2h</div>
+            <div class="chat-unread-dot"></div>
+          </div>
+        </div>
+        <div class="chat-item">
+          <div class="chat-av" style="background:#9090A8">R</div>
+          <div style="flex:1;min-width:0">
+            <div class="chat-name">Roberto Silva</div>
+            <div class="chat-msg">¿Tiene escrituras el terreno?</div>
+          </div>
+          <div class="chat-time">ayer</div>
+        </div>
+      </div>
+    </div>
+    <div class="screen-notes">
+      <strong>Unread dot:</strong> color ámbar en conversaciones sin leer<br>
+      <strong>Realtime:</strong> Supabase Realtime actualiza la lista al instante cuando llega un mensaje
+    </div>
+  </div>
+
+  <!-- CONVERSACIÓN INDIVIDUAL -->
+  <div class="screen-block priority">
+    <div class="screen-header">
+      <div><div class="screen-num">F5-02</div><div class="screen-name">Vista de Conversación</div></div>
+      <div class="screen-route">/chatbot/[lead-id]</div>
+    </div>
+    <div class="screen-preview">
+      <div class="wa-view">
+        <div class="wa-header">
+          <div class="wa-av">C</div>
+          <div><div class="wa-name">Carlos Mendoza</div><div class="wa-status">Sofía atiende automáticamente</div></div>
+          <button style="margin-left:auto;background:#BA7517;color:#fff;border:none;border-radius:12px;padding:3px 8px;font-size:8px;cursor:pointer">Tomar control</button>
+        </div>
+        <div class="wa-msgs">
+          <div style="display:flex;flex-direction:column;align-items:flex-start"><div class="bubble bot">¡Hola! Soy Sofía 🏡 ¿En qué puedo ayudarte?<div class="bubble-time">10:32</div></div></div>
+          <div style="display:flex;flex-direction:column;align-items:flex-end"><div class="bubble client">Hola, me interesa la Casa Coyoacán<div class="bubble-time">10:33</div></div></div>
+          <div style="display:flex;flex-direction:column;align-items:flex-start"><div class="bubble bot">¡Con gusto! 210m², 3 rec, jardín privado, $5,800,000. ¿Agendamos visita? 🗓️<div class="bubble-time">10:33</div></div></div>
+          <div style="display:flex;flex-direction:column;align-items:flex-end"><div class="bubble client">Sí, ¿cuándo pueden? Mi presupuesto es hasta 6M<div class="bubble-time">10:34</div></div></div>
+          <div style="display:flex;flex-direction:column;align-items:flex-start"><div class="bubble bot">¡Perfecto! Mañana 10am o jueves 3pm. ¿Cuál te acomoda? 😊<div class="bubble-time">10:34</div></div></div>
+        </div>
+        <div class="wa-input">
+          <input class="wa-input-box" placeholder="Escribe como agente...">
+          <button class="wa-send">➤</button>
+        </div>
+      </div>
+    </div>
+    <div class="screen-notes">
+      <strong>Bot activo:</strong> Sofía responde sola · El agente puede tomar control en cualquier momento<br>
+      <strong>Historial:</strong> Todas las conversaciones guardadas en tabla conversations en Supabase
+    </div>
+  </div>
+
+  <!-- CONFIGURACIÓN DEL BOT -->
+  <div class="screen-block">
+    <div class="screen-header">
+      <div><div class="screen-num">F5-03</div><div class="screen-name">Configuración del Bot</div></div>
+      <div class="screen-route">/chatbot/configuracion</div>
+    </div>
+    <div class="screen-preview">
+      <div class="bot-config">
+        <div class="bot-config-top"><div class="bot-config-title">Configuración de Sofía</div></div>
+        <div class="bot-tabs">
+          <div class="bot-tab active">Personalidad</div>
+          <div class="bot-tab">Horario</div>
+          <div class="bot-tab">Respuestas</div>
+          <div class="bot-tab">Escalado</div>
+          <div class="bot-tab">Alertas</div>
+        </div>
+        <div class="bot-body">
+          <div class="bot-field-label">NOMBRE DEL BOT</div>
+          <input class="bot-input" value="Sofía">
+          <div class="bot-field-label">TONO</div>
+          <input class="bot-input" value="Profesional y cálido">
+          <div class="bot-row"><div class="bot-row-label">Detectar idioma automáticamente</div><div class="bot-toggle"><div class="bot-toggle-knob"></div></div></div>
+          <div class="bot-row"><div class="bot-row-label">Usar emojis en respuestas</div><div class="bot-toggle"><div class="bot-toggle-knob"></div></div></div>
+          <div class="bot-row"><div class="bot-row-label">Ofrecer visitas automáticamente</div><div class="bot-toggle"><div class="bot-toggle-knob"></div></div></div>
+        </div>
+      </div>
+    </div>
+    <div class="screen-notes">
+      <strong>5 tabs:</strong> Personalidad · Horario (24/7 o por días) · Respuestas rápidas · Escalado al agente · Alertas<br>
+      <strong>Toggle ON:</strong> background var(--brand), knob a la derecha, texto "Sí"
+    </div>
+  </div>
+
+  <!-- FLUJO TÉCNICO -->
+  <div class="screen-block">
+    <div class="screen-header">
+      <div><div class="screen-num">F5-TEC</div><div class="screen-name">Flujo Técnico del Bot</div></div>
+      <div class="screen-route">Referencia para Claude Code</div>
+    </div>
+    <div class="screen-preview">
+      <div class="flow-box">
+        <div class="flow-step"><div class="flow-num">1</div><div class="flow-text">Cliente escribe al WhatsApp → <strong>Twilio recibe</strong> → webhook POST <span>/api/webhook/twilio</span></div></div>
+        <div class="flow-step"><div class="flow-num">2</div><div class="flow-text"><strong>Busca/crea lead</strong> en Supabase por número de teléfono</div></div>
+        <div class="flow-step"><div class="flow-num">3</div><div class="flow-text">Llama a <strong>Claude API</strong> con historial + catálogo activo de la agencia</div></div>
+        <div class="flow-step"><div class="flow-num">4</div><div class="flow-text"><strong>Claude detecta</strong> idioma, intención, genera respuesta</div></div>
+        <div class="flow-step"><div class="flow-num">5</div><div class="flow-text">Calcula <strong>score del lead</strong> (0-100) · Si ≥75 → <span>notificación</span> al agente</div></div>
+        <div class="flow-step"><div class="flow-num">6</div><div class="flow-text">Envía respuesta por <strong>Twilio</strong> · Guarda en <strong>conversations</strong></div></div>
+      </div>
+    </div>
+    <div class="screen-notes">
+      <strong>IMPORTANTE:</strong> ANTHROPIC_API_KEY solo en Server — NUNCA en el cliente<br>
+      <strong>Webhook URL:</strong> configurar en Twilio Console → el número debe apuntar a tu dominio/api/webhook/twilio
+    </div>
+  </div>
+
+</div>
+
+<div style="margin-top:32px;padding:16px 20px;background:rgba(255,255,255,0.02);border-radius:10px;border:0.5px solid rgba(255,255,255,0.06);font-size:11px;color:rgba(255,255,255,0.3);text-align:center">
+  <a href="fase4-core.html" style="color:#BA7517;text-decoration:none">← Fase 4: Core</a>
+  &nbsp;·&nbsp;
+  <a href="INDEX.html" style="color:#BA7517;text-decoration:none">Índice</a>
+  &nbsp;·&nbsp;
+  <a href="fase6-avanzado.html" style="color:#BA7517;text-decoration:none">Fase 6: Avanzado →</a>
+</div>
+
+</body>
+</html>

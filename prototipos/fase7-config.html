@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>InmoIA · Fase 7 — Configuración y Marca</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #0f0f1a; color: #fff; padding: 32px 20px; }
+  .nav { display: flex; align-items: center; gap: 12px; margin-bottom: 32px; }
+  .back { color: #BA7517; text-decoration: none; font-size: 12px; }
+  .phase-title { font-size: 22px; font-weight: 500; }
+  .phase-sub { font-size: 13px; color: rgba(255,255,255,0.4); margin-top: 4px; margin-bottom: 32px; }
+  .screens { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 20px; }
+  .screen-block { background: rgba(255,255,255,0.03); border: 0.5px solid rgba(255,255,255,0.08); border-radius: 12px; overflow: hidden; }
+  .screen-header { padding: 12px 16px; border-bottom: 0.5px solid rgba(255,255,255,0.06); display: flex; align-items: center; justify-content: space-between; }
+  .screen-num { font-size: 10px; color: #BA7517; font-weight: 600; letter-spacing: 0.05em; }
+  .screen-name { font-size: 12px; font-weight: 500; }
+  .screen-route { font-size: 10px; color: rgba(255,255,255,0.3); font-family: monospace; }
+  .screen-preview { padding: 14px; }
+  .screen-notes { padding: 10px 14px; background: rgba(186,117,23,0.06); border-top: 0.5px solid rgba(186,117,23,0.15); font-size: 10px; color: rgba(255,255,255,0.4); line-height: 1.6; }
+  .screen-notes strong { color: #BA7517; }
+
+  /* PERFIL */
+  .perfil { background: #fff; border-radius: 8px; overflow: hidden; }
+  .perfil-hero { background: #F7F6F3; padding: 12px; display: flex; gap: 10px; align-items: center; border-bottom: 0.5px solid #EBEBEB; }
+  .perfil-av { width: 44px; height: 44px; border-radius: 12px; background: #FAEEDA; display: flex; align-items: center; justify-content: center; font-size: 18px; font-weight: 600; color: #854F0B; border: 1.5px solid #FAC775; flex-shrink: 0; }
+  .perfil-name { font-size: 14px; font-weight: 500; color: #1A1A2E; }
+  .perfil-role { font-size: 10px; color: #9090A8; }
+  .perfil-tabs { display: flex; border-bottom: 0.5px solid #EBEBEB; padding: 0 10px; overflow-x: auto; }
+  .perfil-tab { padding: 6px 8px; font-size: 9px; color: #9090A8; border-bottom: 2px solid transparent; white-space: nowrap; }
+  .perfil-tab.active { color: #854F0B; border-bottom-color: #BA7517; font-weight: 500; }
+  .perfil-body { padding: 10px 12px; }
+  .perfil-row { display: flex; align-items: center; justify-content: space-between; padding: 6px 0; border-bottom: 0.5px solid #EBEBEB; }
+  .perfil-label { font-size: 10px; color: #9090A8; }
+  .perfil-val { font-size: 10px; color: #1A1A2E; font-weight: 500; }
+
+  /* MARCA BLANCA */
+  .marca { display: flex; gap: 10px; }
+  .marca-config { flex: 1; background: #fff; border-radius: 8px; padding: 10px; }
+  .marca-preview { flex: 1; background: #0f0f1a; border-radius: 8px; padding: 10px; }
+  .marca-label { font-size: 9px; color: #9090A8; margin-bottom: 4px; }
+  .marca-input { width: 100%; border: 0.5px solid #D4D0C8; border-radius: 6px; padding: 5px 8px; font-size: 10px; color: #1A1A2E; margin-bottom: 8px; }
+  .marca-preview-title { font-size: 9px; color: rgba(255,255,255,0.3); letter-spacing: 0.06em; margin-bottom: 8px; }
+  .marca-preview-logo { display: flex; align-items: center; gap: 6px; margin-bottom: 8px; }
+  .marca-preview-icon { width: 26px; height: 26px; border-radius: 7px; background: #FAEEDA; display: flex; align-items: center; justify-content: center; font-size: 13px; }
+  .marca-preview-name { font-size: 12px; font-weight: 500; color: #fff; }
+  .marca-preview-item { font-size: 9px; color: rgba(255,255,255,0.4); padding: 5px 8px; border-left: 2px solid #BA7517; background: rgba(255,255,255,0.05); border-radius: 0 5px 5px 0; margin-bottom: 4px; }
+
+  /* SELECTOR TEMAS */
+  .temas { background: #fff; border-radius: 8px; padding: 10px; }
+  .temas-title { font-size: 11px; font-weight: 500; color: #1A1A2E; margin-bottom: 10px; }
+  .temas-grid { display: grid; grid-template-columns: repeat(5,1fr); gap: 6px; margin-bottom: 10px; }
+  .tema-opt { border-radius: 8px; overflow: hidden; cursor: pointer; border: 2px solid transparent; transition: all 0.15s; }
+  .tema-opt.active { border-color: #1A1A2E; }
+  .tema-preview { height: 40px; display: flex; }
+  .tema-sidebar { width: 12px; }
+  .tema-content { flex: 1; display: flex; flex-direction: column; gap: 3px; padding: 4px; }
+  .tema-bar { height: 4px; border-radius: 2px; }
+  .tema-label { font-size: 8px; text-align: center; padding: 3px; color: #4A4A6A; background: #F7F6F3; }
+  .temas-mode { display: flex; gap: 6px; }
+  .temas-mode-btn { flex: 1; padding: 6px; border-radius: 6px; text-align: center; font-size: 10px; cursor: pointer; border: 1.5px solid #D4D0C8; color: #4A4A6A; }
+  .temas-mode-btn.active { border-color: #BA7517; background: #FAEEDA; color: #854F0B; font-weight: 500; }
+
+  /* AYUDA */
+  .ayuda { background: #fff; border-radius: 8px; overflow: hidden; }
+  .ayuda-search { padding: 10px 12px; border-bottom: 0.5px solid #EBEBEB; }
+  .ayuda-search-input { width: 100%; border: 0.5px solid #D4D0C8; border-radius: 6px; padding: 6px 10px; font-size: 10px; color: #1A1A2E; }
+  .ayuda-cat { padding: 6px 12px; font-size: 9px; color: #9090A8; letter-spacing: 0.05em; background: #F7F6F3; border-bottom: 0.5px solid #EBEBEB; }
+  .ayuda-item { display: flex; align-items: center; gap: 8px; padding: 8px 12px; border-bottom: 0.5px solid #EBEBEB; cursor: pointer; }
+  .ayuda-item:hover { background: #F7F6F3; }
+  .ayuda-icon { font-size: 14px; flex-shrink: 0; }
+  .ayuda-q { font-size: 10px; color: #1A1A2E; flex: 1; }
+  .ayuda-arrow { font-size: 10px; color: #D4D0C8; }
+
+  /* LÍMITES */
+  .limits { background: #fff; border-radius: 8px; overflow: hidden; }
+  .limits-banner { background: #FCEBEB; border-bottom: 0.5px solid #F7C1C1; padding: 8px 12px; display: flex; gap: 6px; align-items: center; }
+  .limits-banner-icon { font-size: 14px; }
+  .limits-banner-text { font-size: 10px; color: #7A1F1F; line-height: 1.4; flex: 1; }
+  .limits-body { padding: 10px 12px; }
+  .limits-row { margin-bottom: 10px; }
+  .limits-meta { display: flex; justify-content: space-between; font-size: 10px; color: #4A4A6A; margin-bottom: 4px; }
+  .limits-track { height: 5px; background: #EBEBEB; border-radius: 3px; overflow: hidden; }
+  .limits-fill { height: 100%; border-radius: 3px; }
+  .limits-fill.ok { background: #BA7517; }
+  .limits-fill.warn { background: #D85A30; }
+  .limits-fill.full { background: #A32D2D; }
+
+  /* INVITAR */
+  .invite { background: #fff; border-radius: 8px; overflow: hidden; }
+  .invite-body { padding: 12px; }
+  .invite-input-row { display: flex; gap: 6px; margin-bottom: 10px; }
+  .invite-email { flex: 1; border: 0.5px solid #D4D0C8; border-radius: 6px; padding: 6px 10px; font-size: 10px; color: #1A1A2E; }
+  .invite-role { border: 0.5px solid #D4D0C8; border-radius: 6px; padding: 6px 8px; font-size: 10px; color: #1A1A2E; }
+  .invite-btn { background: #0f0f1a; color: #fff; border: none; border-radius: 6px; padding: 6px 12px; font-size: 10px; cursor: pointer; }
+  .invite-member { display: flex; gap: 8px; align-items: center; padding: 6px 0; border-bottom: 0.5px solid #EBEBEB; }
+  .invite-av { width: 26px; height: 26px; border-radius: 7px; background: #FAEEDA; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 600; color: #854F0B; flex-shrink: 0; }
+  .invite-name { font-size: 11px; color: #1A1A2E; flex: 1; }
+  .invite-role-badge { font-size: 9px; padding: 1px 6px; border-radius: 10px; background: #F7F6F3; color: #9090A8; border: 0.5px solid #EBEBEB; }
+</style>
+</head>
+<body>
+
+<div class="nav">
+  <a href="INDEX.html" class="back">← Índice</a>
+  <span style="color:rgba(255,255,255,0.2)">|</span>
+  <span style="font-size:11px;color:rgba(255,255,255,0.3)">FASE 7</span>
+</div>
+
+<div class="phase-title">⚙️ Configuración y Marca</div>
+<div class="phase-sub">Perfil, marca blanca, temas, ayuda, límites, equipo</div>
+
+<div class="screens">
+
+  <!-- PERFIL -->
+  <div class="screen-block">
+    <div class="screen-header">
+      <div><div class="screen-num">F7-01</div><div class="screen-name">Perfil del Agente</div></div>
+      <div class="screen-route">/configuracion</div>
+    </div>
+    <div class="screen-preview">
+      <div class="perfil">
+        <div class="perfil-hero">
+          <div class="perfil-av">LA</div>
+          <div>
+            <div class="perfil-name">Luis Aguilar</div>
+            <div class="perfil-role">Admin · Agencia Aguilar · Plan Pro</div>
+          </div>
+          <button style="margin-left:auto;background:#FAEEDA;color:#854F0B;border:1.5px solid #FAC775;border-radius:6px;padding:4px 10px;font-size:9px;cursor:pointer">Editar foto</button>
+        </div>
+        <div class="perfil-tabs">
+          <div class="perfil-tab active">Personal</div>
+          <div class="perfil-tab">Agencia</div>
+          <div class="perfil-tab">Seguridad</div>
+          <div class="perfil-tab">Notifs</div>
+          <div class="perfil-tab">Apariencia</div>
+          <div class="perfil-tab">Plan</div>
+        </div>
+        <div class="perfil-body">
+          <div class="perfil-row"><span class="perfil-label">Nombre</span><span class="perfil-val">Luis Aguilar</span></div>
+          <div class="perfil-row"><span class="perfil-label">Email</span><span class="perfil-val"><a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="365a435f457657515358555f575751435f5a57441855595b">[email&#160;protected]</a></span></div>
+          <div class="perfil-row"><span class="perfil-label">WhatsApp</span><span class="perfil-val">+52 33 1234 5678</span></div>
+          <div class="perfil-row"><span class="perfil-label">Zona horaria</span><span class="perfil-val">America/Mexico_City</span></div>
+        </div>
+      </div>
+    </div>
+    <div class="screen-notes">
+      <strong>6 tabs:</strong> Personal · Agencia · Seguridad · Notificaciones · Apariencia (tema/dark) · Plan<br>
+      <strong>Solo admin</strong> ve los tabs de Agencia y Plan
+    </div>
+  </div>
+
+  <!-- MARCA BLANCA -->
+  <div class="screen-block">
+    <div class="screen-header">
+      <div><div class="screen-num">F7-02</div><div class="screen-name">Marca Blanca</div></div>
+      <div class="screen-route">/configuracion/marca</div>
+    </div>
+    <div class="screen-preview">
+      <div class="marca">
+        <div class="marca-config">
+          <div style="font-size:10px;font-weight:500;color:#1A1A2E;margin-bottom:8px">Tu agencia</div>
+          <div class="marca-label">NOMBRE</div>
+          <input class="marca-input" value="Agencia Aguilar">
+          <div class="marca-label">EMOJI / ÍCONO</div>
+          <input class="marca-input" value="🌊">
+          <div class="marca-label">COLOR PRINCIPAL</div>
+          <div style="display:flex;gap:5px">
+            <div style="width:20px;height:20px;border-radius:50%;background:#BA7517;border:2px solid #1A1A2E;cursor:pointer"></div>
+            <div style="width:20px;height:20px;border-radius:50%;background:#1D9E75;cursor:pointer"></div>
+            <div style="width:20px;height:20px;border-radius:50%;background:#378ADD;cursor:pointer"></div>
+            <div style="width:20px;height:20px;border-radius:50%;background:#D85A30;cursor:pointer"></div>
+            <div style="width:20px;height:20px;border-radius:50%;background:#7F77DD;cursor:pointer"></div>
+          </div>
+        </div>
+        <div class="marca-preview">
+          <div class="marca-preview-title">PREVIEW EN VIVO</div>
+          <div class="marca-preview-logo">
+            <div class="marca-preview-icon">🌊</div>
+            <div class="marca-preview-name">Agencia Aguilar</div>
+          </div>
+          <div class="marca-preview-item">⬡ Dashboard</div>
+          <div class="marca-preview-item">👥 Leads</div>
+          <div class="marca-preview-item">🏠 Propiedades</div>
+          <div style="margin-top:6px;font-size:8px;color:rgba(255,255,255,0.2)">Los cambios se aplican al instante</div>
+        </div>
+      </div>
+    </div>
+    <div class="screen-notes">
+      <strong>Preview en tiempo real:</strong> Los cambios se ven en el sidebar derecho al instante<br>
+      <strong>Marca blanca completa:</strong> Logo, nombre, colores, dominio personalizado (plan Pro+)
+    </div>
+  </div>
+
+  <!-- SELECTOR TEMAS -->
+  <div class="screen-block">
+    <div class="screen-header">
+      <div><div class="screen-num">F7-03</div><div class="screen-name">Selector de Temas</div></div>
+      <div class="screen-route">/configuracion → Apariencia</div>
+    </div>
+    <div class="screen-preview">
+      <div class="temas">
+        <div class="temas-title">Color del tema</div>
+        <div class="temas-grid">
+          <div class="tema-opt active">
+            <div class="tema-preview"><div class="tema-sidebar" style="background:#BA7517"></div><div class="tema-content"><div class="tema-bar" style="background:#FAEEDA;width:70%"></div><div class="tema-bar" style="background:#FAC775;width:50%"></div></div></div>
+            <div class="tema-label">Ámbar</div>
+          </div>
+          <div class="tema-opt">
+            <div class="tema-preview"><div class="tema-sidebar" style="background:#1D9E75"></div><div class="tema-content"><div class="tema-bar" style="background:#E1F5EE;width:70%"></div><div class="tema-bar" style="background:#9FE1CB;width:50%"></div></div></div>
+            <div class="tema-label">Verde</div>
+          </div>
+          <div class="tema-opt">
+            <div class="tema-preview"><div class="tema-sidebar" style="background:#378ADD"></div><div class="tema-content"><div class="tema-bar" style="background:#E6F1FB;width:70%"></div><div class="tema-bar" style="background:#B5D4F4;width:50%"></div></div></div>
+            <div class="tema-label">Azul</div>
+          </div>
+          <div class="tema-opt">
+            <div class="tema-preview"><div class="tema-sidebar" style="background:#D85A30"></div><div class="tema-content"><div class="tema-bar" style="background:#FAECE7;width:70%"></div><div class="tema-bar" style="background:#F5C4B3;width:50%"></div></div></div>
+            <div class="tema-label">Coral</div>
+          </div>
+          <div class="tema-opt">
+            <div class="tema-preview"><div class="tema-sidebar" style="background:#7F77DD"></div><div class="tema-content"><div class="tema-bar" style="background:#EEEDFE;width:70%"></div><div class="tema-bar" style="background:#AFA9EC;width:50%"></div></div></div>
+            <div class="tema-label">Morado</div>
+          </div>
+        </div>
+        <div style="font-size:10px;font-weight:500;color:#1A1A2E;margin-bottom:6px">Modo</div>
+        <div class="temas-mode">
+          <div class="temas-mode-btn active">☀️ Claro</div>
+          <div class="temas-mode-btn">🌙 Oscuro</div>
+          <div class="temas-mode-btn">⚙️ Sistema</div>
+        </div>
+      </div>
+    </div>
+    <div class="screen-notes">
+      <strong>5 temas:</strong> Ámbar (default) · Verde · Azul · Coral · Morado<br>
+      <strong>Aplica al instante</strong> en toda la interfaz · Se guarda en localStorage · El sidebar siempre permanece oscuro (#0F0F1A)
+    </div>
+  </div>
+
+  <!-- CENTRO DE AYUDA -->
+  <div class="screen-block">
+    <div class="screen-header">
+      <div><div class="screen-num">F7-04</div><div class="screen-name">Centro de Ayuda</div></div>
+      <div class="screen-route">/ayuda</div>
+    </div>
+    <div class="screen-preview">
+      <div class="ayuda">
+        <div class="ayuda-search">
+          <input class="ayuda-search-input" placeholder="🔍 ¿Cómo configuro el chatbot?">
+        </div>
+        <div class="ayuda-cat">CHATBOT</div>
+        <div class="ayuda-item"><div class="ayuda-icon">💬</div><div class="ayuda-q">¿Cómo conectar mi número de WhatsApp?</div><div class="ayuda-arrow">›</div></div>
+        <div class="ayuda-item"><div class="ayuda-icon">🤖</div><div class="ayuda-q">¿Cómo personalizar las respuestas del bot?</div><div class="ayuda-arrow">›</div></div>
+        <div class="ayuda-cat">PROPIEDADES</div>
+        <div class="ayuda-item"><div class="ayuda-icon">✦</div><div class="ayuda-q">¿Cómo funciona el análisis de fotos con IA?</div><div class="ayuda-arrow">›</div></div>
+        <div class="ayuda-item"><div class="ayuda-icon">🌐</div><div class="ayuda-q">¿Cómo se publica en portales externos?</div><div class="ayuda-arrow">›</div></div>
+      </div>
+    </div>
+    <div class="screen-notes">
+      <strong>Incluye:</strong> Búsqueda inteligente · Categorías · Artículos · Videos · Chat con soporte<br>
+      <strong>Bot de ayuda:</strong> También usa Claude para responder preguntas de soporte
+    </div>
+  </div>
+
+  <!-- LÍMITES DE PLAN -->
+  <div class="screen-block">
+    <div class="screen-header">
+      <div><div class="screen-num">F7-05</div><div class="screen-name">Límites de Plan</div></div>
+      <div class="screen-route">/configuracion/plan</div>
+    </div>
+    <div class="screen-preview">
+      <div class="limits">
+        <div class="limits-banner">
+          <div class="limits-banner-icon">⚠️</div>
+          <div class="limits-banner-text">Alcanzaste el 80% de mensajes del mes. <strong>Actualiza tu plan</strong> para no interrumpir el servicio.</div>
+        </div>
+        <div class="limits-body">
+          <div class="limits-row">
+            <div class="limits-meta"><span>Mensajes del chatbot</span><span style="color:#D85A30;font-weight:500">800 / 1,000</span></div>
+            <div class="limits-track"><div class="limits-fill warn" style="width:80%"></div></div>
+          </div>
+          <div class="limits-row">
+            <div class="limits-meta"><span>Propiedades activas</span><span>28 / 50</span></div>
+            <div class="limits-track"><div class="limits-fill ok" style="width:56%"></div></div>
+          </div>
+          <div class="limits-row">
+            <div class="limits-meta"><span>Agentes</span><span>4 / 5</span></div>
+            <div class="limits-track"><div class="limits-fill ok" style="width:80%"></div></div>
+          </div>
+          <button style="width:100%;background:#BA7517;color:#fff;border:none;border-radius:6px;padding:7px;font-size:10px;cursor:pointer;margin-top:8px">⬆ Actualizar a Plan Pro</button>
+        </div>
+      </div>
+    </div>
+    <div class="screen-notes">
+      <strong>3 estados de barra:</strong> OK (ámbar) · Advertencia 80% (coral) · Límite 100% (rojo)<br>
+      <strong>Banners automáticos</strong> en dashboard cuando se acerca al límite
+    </div>
+  </div>
+
+  <!-- INVITAR AGENTES -->
+  <div class="screen-block">
+    <div class="screen-header">
+      <div><div class="screen-num">F7-06</div><div class="screen-name">Invitar Agentes</div></div>
+      <div class="screen-route">/configuracion/agencia → Equipo</div>
+    </div>
+    <div class="screen-preview">
+      <div class="invite">
+        <div class="invite-body">
+          <div style="font-size:10px;font-weight:500;color:#1A1A2E;margin-bottom:8px">Invitar nuevo miembro</div>
+          <div class="invite-input-row">
+            <input class="invite-email" placeholder="email@agencia.com">
+            <select class="invite-role"><option>Agente</option><option>Viewer</option></select>
+            <button class="invite-btn">Invitar</button>
+          </div>
+          <div style="font-size:9px;color:#9090A8;margin-bottom:8px;letter-spacing:0.04em">EQUIPO ACTUAL (4/5)</div>
+          <div class="invite-member">
+            <div class="invite-av">LA</div>
+            <div class="invite-name">Luis Aguilar</div>
+            <div class="invite-role-badge" style="background:#FAEEDA;color:#854F0B;border-color:#FAC775">Admin</div>
+          </div>
+          <div class="invite-member">
+            <div class="invite-av" style="background:#E1F5EE;color:#0F6E56">MR</div>
+            <div class="invite-name">María Rodríguez</div>
+            <div class="invite-role-badge">Agente</div>
+          </div>
+          <div class="invite-member">
+            <div class="invite-av" style="background:#E6F1FB;color:#185FA5">JP</div>
+            <div class="invite-name">Juan Pérez · <span style="font-size:9px;color:#BA7517">Pendiente</span></div>
+            <div class="invite-role-badge">Agente</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="screen-notes">
+      <strong>Invitación:</strong> Email + link único con token · Expira en 48h<br>
+      <strong>Roles:</strong> Solo admin puede invitar · Máximo de agentes según el plan
+    </div>
+  </div>
+
+</div>
+
+<div style="margin-top:32px;padding:16px 20px;background:rgba(255,255,255,0.02);border-radius:10px;border:0.5px solid rgba(255,255,255,0.06);font-size:11px;color:rgba(255,255,255,0.3);text-align:center">
+  <a href="fase6-avanzado.html" style="color:#BA7517;text-decoration:none">← Fase 6: Avanzado</a>
+  &nbsp;·&nbsp;
+  <a href="INDEX.html" style="color:#BA7517;text-decoration:none">Índice</a>
+  &nbsp;�·&nbsp;
+  <a href="fase8-admin.html" style="color:#BA7517;text-decoration:none">Fase 8: Admin →</a>
+</div>
+
+</body>
+</html>

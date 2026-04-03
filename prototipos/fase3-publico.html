@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>InmoIA · Fase 3 — Flujos Públicos</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #0f0f1a; color: #fff; padding: 32px 20px; }
+  .nav { display: flex; align-items: center; gap: 12px; margin-bottom: 32px; }
+  .back { color: #BA7517; text-decoration: none; font-size: 12px; }
+  .phase-label { font-size: 11px; color: rgba(255,255,255,0.3); letter-spacing: 0.06em; }
+  .phase-title { font-size: 22px; font-weight: 500; }
+  .phase-sub { font-size: 13px; color: rgba(255,255,255,0.4); margin-top: 4px; margin-bottom: 32px; }
+  .screens { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 24px; }
+  .screen-block { background: rgba(255,255,255,0.03); border: 0.5px solid rgba(255,255,255,0.08); border-radius: 12px; overflow: hidden; }
+  .screen-header { padding: 14px 16px; border-bottom: 0.5px solid rgba(255,255,255,0.06); display: flex; align-items: center; justify-content: space-between; }
+  .screen-num { font-size: 10px; color: #BA7517; font-weight: 600; letter-spacing: 0.05em; }
+  .screen-name { font-size: 13px; font-weight: 500; }
+  .screen-route { font-size: 10px; color: rgba(255,255,255,0.3); font-family: monospace; }
+  .screen-preview { padding: 16px; min-height: 200px; }
+  .screen-notes { padding: 12px 16px; background: rgba(186,117,23,0.06); border-top: 0.5px solid rgba(186,117,23,0.15); font-size: 11px; color: rgba(255,255,255,0.4); line-height: 1.6; }
+  .screen-notes strong { color: #BA7517; }
+
+  /* MINI PREVIEWS */
+  .preview-landing { background: linear-gradient(135deg, #0f0f1a, #1a1a2e); border-radius: 8px; padding: 20px; text-align: center; }
+  .preview-hero-title { font-size: 18px; font-weight: 600; margin-bottom: 8px; line-height: 1.3; }
+  .preview-hero-title span { color: #BA7517; }
+  .preview-hero-sub { font-size: 11px; color: rgba(255,255,255,0.4); margin-bottom: 16px; }
+  .preview-btns { display: flex; gap: 8px; justify-content: center; }
+  .preview-btn-p { background: #BA7517; color: #fff; border: none; border-radius: 8px; padding: 8px 16px; font-size: 11px; cursor: pointer; }
+  .preview-btn-g { background: rgba(255,255,255,0.06); color: #fff; border: 0.5px solid rgba(255,255,255,0.15); border-radius: 8px; padding: 8px 16px; font-size: 11px; cursor: pointer; }
+  .preview-stats { display: flex; gap: 20px; justify-content: center; margin-top: 16px; }
+  .preview-stat-val { font-size: 16px; font-weight: 500; color: #BA7517; }
+  .preview-stat-label { font-size: 9px; color: rgba(255,255,255,0.3); }
+
+  .preview-login { background: #fff; border-radius: 8px; padding: 20px; }
+  .preview-login-title { font-size: 15px; font-weight: 500; color: #1A1A2E; margin-bottom: 4px; }
+  .preview-login-sub { font-size: 11px; color: #9090A8; margin-bottom: 16px; }
+  .preview-social-btn { width: 100%; padding: 8px 12px; border: 0.5px solid #D4D0C8; border-radius: 8px; background: #fff; font-size: 11px; color: #4A4A6A; display: flex; align-items: center; gap: 8px; margin-bottom: 8px; cursor: pointer; }
+  .preview-divider { text-align: center; font-size: 10px; color: #9090A8; margin: 12px 0; }
+  .preview-input { width: 100%; border: 0.5px solid #D4D0C8; border-radius: 6px; padding: 7px 10px; font-size: 11px; color: #1A1A2E; margin-bottom: 8px; }
+  .preview-btn-login { width: 100%; background: #0f0f1a; color: #fff; border: none; border-radius: 8px; padding: 9px; font-size: 11px; cursor: pointer; margin-top: 4px; }
+
+  .preview-onboarding { display: flex; border-radius: 8px; overflow: hidden; height: 180px; }
+  .preview-ob-left { width: 45%; background: #0f0f1a; padding: 16px; display: flex; flex-direction: column; }
+  .preview-ob-right { flex: 1; background: #F7F6F3; padding: 16px; }
+  .preview-ob-step { font-size: 10px; color: #BA7517; margin-bottom: 8px; }
+  .preview-ob-title { font-size: 14px; font-weight: 500; color: #fff; line-height: 1.3; }
+  .preview-ob-title span { color: #BA7517; }
+  .preview-ob-dots { display: flex; gap: 4px; margin-top: auto; }
+  .ob-dot { width: 6px; height: 6px; border-radius: 3px; background: rgba(255,255,255,0.2); }
+  .ob-dot.a { background: #BA7517; width: 16px; }
+  .preview-ob-form-title { font-size: 13px; font-weight: 500; color: #1A1A2E; margin-bottom: 10px; }
+  .preview-ob-input { width: 100%; border: 0.5px solid #D4D0C8; border-radius: 6px; padding: 6px 8px; font-size: 10px; margin-bottom: 6px; }
+  .preview-ob-btn { background: #BA7517; color: #fff; border: none; border-radius: 6px; padding: 7px 14px; font-size: 10px; width: 100%; }
+
+  .preview-404 { background: #F7F6F3; border-radius: 8px; padding: 24px; text-align: center; }
+  .preview-404-num { font-size: 48px; font-weight: 500; color: #EBEBEB; line-height: 1; position: relative; display: inline-block; }
+  .preview-404-emoji { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 22px; }
+  .preview-404-title { font-size: 14px; font-weight: 500; color: #1A1A2E; margin: 12px 0 6px; }
+  .preview-404-sub { font-size: 11px; color: #9090A8; margin-bottom: 14px; }
+  .preview-404-btn { background: #BA7517; color: #fff; border: none; border-radius: 8px; padding: 7px 16px; font-size: 11px; cursor: pointer; }
+
+  .preview-recovery { background: #fff; border-radius: 8px; padding: 20px; }
+  .preview-steps-row { display: flex; align-items: center; gap: 6px; margin-bottom: 14px; }
+  .prev-step-dot { width: 20px; height: 20px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 9px; font-weight: 600; flex-shrink: 0; }
+  .prev-step-dot.done { background: #EAF3DE; color: #3B6D11; }
+  .prev-step-dot.active { background: #BA7517; color: #fff; }
+  .prev-step-dot.pending { background: #f0f0f0; color: #9090A8; }
+  .prev-step-line { flex: 1; height: 1px; background: #EBEBEB; }
+  .preview-recovery-title { font-size: 13px; font-weight: 500; color: #1A1A2E; margin-bottom: 4px; }
+  .preview-recovery-sub { font-size: 10px; color: #9090A8; margin-bottom: 12px; }
+  .preview-code-row { display: flex; gap: 6px; margin-bottom: 12px; }
+  .preview-code-box { width: 32px; height: 36px; border: 1.5px solid #BA7517; border-radius: 6px; background: #FAEEDA; display: flex; align-items: center; justify-content: center; font-size: 16px; font-weight: 500; color: #854F0B; }
+  .preview-code-box.empty { border-color: #D4D0C8; background: #F7F6F3; color: transparent; }
+
+  .preview-terms { background: #fff; border-radius: 8px; padding: 16px; }
+  .preview-terms-badge { display: inline-block; background: #F7F6F3; border: 0.5px solid #D4D0C8; border-radius: 20px; padding: 2px 8px; font-size: 9px; color: #9090A8; margin-bottom: 8px; }
+  .preview-terms-title { font-size: 14px; font-weight: 500; color: #1A1A2E; margin-bottom: 4px; }
+  .preview-terms-meta { font-size: 10px; color: #9090A8; margin-bottom: 12px; }
+  .preview-terms-section { font-size: 10px; color: #9090A8; letter-spacing: 0.04em; margin-bottom: 4px; }
+  .preview-terms-text { font-size: 11px; color: #4A4A6A; line-height: 1.6; }
+  .preview-terms-highlight { background: #FAEEDA; border-left: 2px solid #BA7517; padding: 6px 8px; font-size: 10px; color: #412402; border-radius: 0 4px 4px 0; margin-top: 8px; }
+</style>
+</head>
+<body>
+
+<div class="nav">
+  <a href="INDEX.html" class="back">← Índice</a>
+  <span style="color:rgba(255,255,255,0.2)">|</span>
+  <div>
+    <div class="phase-label">FASE 3</div>
+  </div>
+</div>
+
+<div class="phase-title">🌐 Flujos Públicos</div>
+<div class="phase-sub">Pantallas sin autenticación — lo que ve cualquier visitante</div>
+
+<div class="screens">
+
+  <!-- LANDING -->
+  <div class="screen-block">
+    <div class="screen-header">
+      <div><div class="screen-num">F3-01</div><div class="screen-name">Landing Page</div></div>
+      <div class="screen-route">/</div>
+    </div>
+    <div class="screen-preview">
+      <div class="preview-landing">
+        <div style="font-size:11px;color:rgba(255,255,255,0.3);margin-bottom:12px">🌊 InmoIA</div>
+        <div class="preview-hero-title">Tu agencia vende más<br>mientras la <span>IA trabaja</span></div>
+        <div class="preview-hero-sub">Chatbot WhatsApp 24/7 · CRM inteligente · Descripciones con IA</div>
+        <div class="preview-btns">
+          <button class="preview-btn-p">Empezar gratis →</button>
+          <button class="preview-btn-g">Ver demo</button>
+        </div>
+        <div class="preview-stats">
+          <div><div class="preview-stat-val">33x</div><div class="preview-stat-label">ROI PROMEDIO</div></div>
+          <div><div class="preview-stat-val">24/7</div><div class="preview-stat-label">BOT ACTIVO</div></div>
+          <div><div class="preview-stat-val">3 min</div><div class="preview-stat-label">SETUP</div></div>
+        </div>
+      </div>
+    </div>
+    <div class="screen-notes">
+      <strong>Incluye:</strong> Hero con stats · Features · Cómo funciona · Precios · Testimonios · CTA final<br>
+      <strong>Claude Code:</strong> "Construye la landing page pública de InmoIA"
+    </div>
+  </div>
+
+  <!-- LOGIN -->
+  <div class="screen-block">
+    <div class="screen-header">
+      <div><div class="screen-num">F3-02</div><div class="screen-name">Login / Registro</div></div>
+      <div class="screen-route">/login</div>
+    </div>
+    <div class="screen-preview">
+      <div class="preview-login">
+        <div class="preview-login-title">Iniciar sesión</div>
+        <div class="preview-login-sub">Bienvenido de regreso a InmoIA</div>
+        <button class="preview-social-btn">🔴 Continuar con Google</button>
+        <button class="preview-social-btn">🟢 Continuar con WhatsApp</button>
+        <button class="preview-social-btn">🔵 Continuar con Facebook</button>
+        <div class="preview-divider">o con email</div>
+        <input class="preview-input" placeholder="tu@email.com" />
+        <button class="preview-btn-login">Enviar magic link →</button>
+      </div>
+    </div>
+    <div class="screen-notes">
+      <strong>Auth:</strong> Google OAuth + Magic Link (email) + WhatsApp OTP<br>
+      <strong>Sin contraseña:</strong> más seguro y más fácil para agentes
+    </div>
+  </div>
+
+  <!-- ONBOARDING -->
+  <div class="screen-block">
+    <div class="screen-header">
+      <div><div class="screen-num">F3-03</div><div class="screen-name">Onboarding Animado</div></div>
+      <div class="screen-route">/registro</div>
+    </div>
+    <div class="screen-preview">
+      <div class="preview-onboarding">
+        <div class="preview-ob-left">
+          <div class="preview-ob-step">02 / 05</div>
+          <div class="preview-ob-title">Nunca pierdas un <span>lead</span> por falta de respuesta</div>
+          <div class="preview-ob-dots">
+            <div class="ob-dot"></div><div class="ob-dot a"></div>
+            <div class="ob-dot"></div><div class="ob-dot"></div><div class="ob-dot"></div>
+          </div>
+        </div>
+        <div class="preview-ob-right">
+          <div class="preview-ob-form-title">Cuéntanos de tu agencia</div>
+          <input class="preview-ob-input" value="Agencia Aguilar" />
+          <input class="preview-ob-input" value="Guadalajara" />
+          <button class="preview-ob-btn">Continuar →</button>
+        </div>
+      </div>
+    </div>
+    <div class="screen-notes">
+      <strong>5 pasos:</strong> Cuenta → Agencia → Plan → WhatsApp → Listo<br>
+      <strong>Panel izquierdo:</strong> slides animados sincronizados con el formulario
+    </div>
+  </div>
+
+  <!-- RECUPERAR PASSWORD -->
+  <div class="screen-block">
+    <div class="screen-header">
+      <div><div class="screen-num">F3-04</div><div class="screen-name">Recuperar Contraseña</div></div>
+      <div class="screen-route">/recuperar-password</div>
+    </div>
+    <div class="screen-preview">
+      <div class="preview-recovery">
+        <div class="preview-steps-row">
+          <div class="prev-step-dot done">✓</div>
+          <div class="prev-step-line"></div>
+          <div class="prev-step-dot active">2</div>
+          <div class="prev-step-line"></div>
+          <div class="prev-step-dot pending">3</div>
+        </div>
+        <div class="preview-recovery-title">Revisa tu WhatsApp</div>
+        <div class="preview-recovery-sub">Enviamos un código a +52 33 ···5678. Válido 10 min.</div>
+        <div class="preview-code-row">
+          <div class="preview-code-box">4</div>
+          <div class="preview-code-box">8</div>
+          <div class="preview-code-box">2</div>
+          <div class="preview-code-box empty">·</div>
+          <div class="preview-code-box empty">·</div>
+          <div class="preview-code-box empty">·</div>
+        </div>
+        <button class="preview-ob-btn" style="width:100%">Verificar →</button>
+      </div>
+    </div>
+    <div class="screen-notes">
+      <strong>3 pasos:</strong> Email → Código 6 dígitos → Nueva contraseña con indicador de fortaleza
+    </div>
+  </div>
+
+  <!-- 404 -->
+  <div class="screen-block">
+    <div class="screen-header">
+      <div><div class="screen-num">F3-05</div><div class="screen-name">Página 404</div></div>
+      <div class="screen-route">/* (not found)</div>
+    </div>
+    <div class="screen-preview">
+      <div class="preview-404">
+        <div class="preview-404-num">404<div class="preview-404-emoji">🏠</div></div>
+        <div class="preview-404-title">Esta página no existe</div>
+        <div class="preview-404-sub">La propiedad puede haber sido vendida o la URL es incorrecta.</div>
+        <button class="preview-404-btn">🏠 Ver todas las propiedades</button>
+      </div>
+    </div>
+    <div class="screen-notes">
+      <strong>Incluye:</strong> Buscador integrado · Botón volver · Link al chatbot WhatsApp como último recurso
+    </div>
+  </div>
+
+  <!-- TÉRMINOS -->
+  <div class="screen-block">
+    <div class="screen-header">
+      <div><div class="screen-num">F3-06</div><div class="screen-name">Términos y Privacidad</div></div>
+      <div class="screen-route">/terminos · /privacidad</div>
+    </div>
+    <div class="screen-preview">
+      <div class="preview-terms">
+        <div class="preview-terms-badge">📄 Documento legal</div>
+        <div class="preview-terms-title">Términos y condiciones de uso</div>
+        <div class="preview-terms-meta">Última actualización: 1 de abril 2026 · Versión 1.0<br>Gamasoft IA Technologies S.A.S.</div>
+        <div class="preview-terms-section">SECCIÓN 4 — PLANES Y PAGOS</div>
+        <div class="preview-terms-text">Los pagos se procesan mediante Stripe. Se otorga período de gracia de 3 días...</div>
+        <div class="preview-terms-highlight">Garantía de 30 días sin riesgo: reembolso completo si no está satisfecho.</div>
+      </div>
+    </div>
+    <div class="screen-notes">
+      <strong>3 documentos:</strong> Términos · Política de privacidad · Aviso LFPDPPP (México)<br>
+      <strong>Cumple:</strong> LFPDPPP · GDPR · CCPA
+    </div>
+  </div>
+
+</div>
+
+<div style="margin-top:32px;padding:16px 20px;background:rgba(255,255,255,0.02);border-radius:10px;border:0.5px solid rgba(255,255,255,0.06);font-size:11px;color:rgba(255,255,255,0.3);text-align:center">
+  <a href="INDEX.html" style="color:#BA7517;text-decoration:none">← Volver al índice</a>
+  &nbsp;·&nbsp;
+  <a href="fase4-core.html" style="color:#BA7517;text-decoration:none">Fase 4: Core del producto →</a>
+</div>
+
+</body>
+</html>

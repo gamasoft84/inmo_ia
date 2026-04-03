@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>InmoIA · Fase 4 — Core del Producto</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #0f0f1a; color: #fff; padding: 32px 20px; }
+  .nav { display: flex; align-items: center; gap: 12px; margin-bottom: 32px; }
+  .back { color: #BA7517; text-decoration: none; font-size: 12px; }
+  .phase-title { font-size: 22px; font-weight: 500; }
+  .phase-sub { font-size: 13px; color: rgba(255,255,255,0.4); margin-top: 4px; margin-bottom: 32px; }
+  .screens { display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: 24px; }
+  .screen-block { background: rgba(255,255,255,0.03); border: 0.5px solid rgba(255,255,255,0.08); border-radius: 12px; overflow: hidden; }
+  .screen-header { padding: 14px 16px; border-bottom: 0.5px solid rgba(255,255,255,0.06); display: flex; align-items: center; justify-content: space-between; }
+  .screen-num { font-size: 10px; color: #BA7517; font-weight: 600; letter-spacing: 0.05em; }
+  .screen-name { font-size: 13px; font-weight: 500; }
+  .screen-route { font-size: 10px; color: rgba(255,255,255,0.3); font-family: monospace; }
+  .screen-preview { padding: 16px; }
+  .screen-notes { padding: 12px 16px; background: rgba(186,117,23,0.06); border-top: 0.5px solid rgba(186,117,23,0.15); font-size: 11px; color: rgba(255,255,255,0.4); line-height: 1.6; }
+  .screen-notes strong { color: #BA7517; }
+
+  /* DASHBOARD */
+  .dash { background: #F7F6F3; border-radius: 8px; overflow: hidden; }
+  .dash-top { background: #0f0f1a; padding: 8px 12px; display: flex; align-items: center; gap: 8px; }
+  .dash-logo { font-size: 11px; font-weight: 500; color: #BA7517; }
+  .dash-body { display: flex; height: 160px; }
+  .dash-sidebar { width: 70px; background: #0f0f1a; padding: 8px 0; }
+  .dash-nav-item { padding: 6px 8px; font-size: 9px; color: rgba(255,255,255,0.3); border-left: 2px solid transparent; }
+  .dash-nav-item.active { color: #fff; border-left-color: #BA7517; background: rgba(255,255,255,0.05); }
+  .dash-main { flex: 1; padding: 10px; }
+  .dash-stats { display: grid; grid-template-columns: repeat(4,1fr); gap: 6px; margin-bottom: 8px; }
+  .dash-stat { background: #fff; border-radius: 6px; border: 0.5px solid #EBEBEB; padding: 8px; }
+  .dash-stat-val { font-size: 16px; font-weight: 500; color: #BA7517; }
+  .dash-stat-label { font-size: 8px; color: #9090A8; }
+  .dash-alert { background: #FAEEDA; border: 0.5px solid #FAC775; border-radius: 6px; padding: 6px 8px; font-size: 9px; color: #412402; }
+
+  /* LEADS */
+  .leads-table { background: #F7F6F3; border-radius: 8px; overflow: hidden; }
+  .leads-top { background: #fff; padding: 8px 12px; display: flex; gap: 6px; border-bottom: 0.5px solid #EBEBEB; }
+  .leads-search { flex: 1; border: 0.5px solid #D4D0C8; border-radius: 6px; padding: 5px 8px; font-size: 10px; color: #4A4A6A; }
+  .leads-filter { padding: 5px 10px; border-radius: 20px; font-size: 9px; border: 1.5px solid #D4D0C8; color: #9090A8; background: #F7F6F3; }
+  .leads-filter.hot { border-color: #BA7517; background: #FAEEDA; color: #854F0B; }
+  .leads-row { display: flex; align-items: center; gap: 8px; padding: 7px 12px; border-bottom: 0.5px solid #EBEBEB; background: #fff; }
+  .leads-av { width: 24px; height: 24px; border-radius: 6px; background: #FAEEDA; display: flex; align-items: center; justify-content: center; font-size: 9px; font-weight: 600; color: #854F0B; flex-shrink: 0; }
+  .leads-name { font-size: 11px; font-weight: 500; color: #1A1A2E; flex: 1; }
+  .leads-prop { font-size: 9px; color: #9090A8; }
+  .pill-hot  { background: #FCEBEB; color: #A32D2D; font-size: 9px; font-weight: 600; padding: 2px 6px; border-radius: 10px; }
+  .pill-warm { background: #FAEEDA; color: #854F0B; font-size: 9px; font-weight: 600; padding: 2px 6px; border-radius: 10px; }
+  .pill-cold { background: #f0f0f0; color: #9090A8; font-size: 9px; font-weight: 600; padding: 2px 6px; border-radius: 10px; }
+
+  /* PROPIEDAD PÚBLICA */
+  .prop-pub { background: #fff; border-radius: 8px; overflow: hidden; }
+  .prop-pub-nav { padding: 6px 10px; border-bottom: 0.5px solid #EBEBEB; display: flex; align-items: center; justify-content: space-between; }
+  .prop-pub-logo { font-size: 11px; font-weight: 500; color: #1A1A2E; }
+  .prop-pub-img { height: 80px; background: linear-gradient(135deg, #8B7355, #C4A882); display: flex; align-items: center; justify-content: center; font-size: 32px; }
+  .prop-pub-body { padding: 10px; display: flex; gap: 8px; }
+  .prop-pub-main { flex: 1; }
+  .prop-pub-type { font-size: 9px; color: #BA7517; font-weight: 600; letter-spacing: 0.04em; margin-bottom: 3px; }
+  .prop-pub-title { font-size: 12px; font-weight: 500; color: #1A1A2E; margin-bottom: 2px; }
+  .prop-pub-price { font-size: 15px; font-weight: 500; color: #854F0B; }
+  .prop-pub-side { width: 90px; }
+  .prop-pub-btn { width: 100%; background: #BA7517; color: #fff; border: none; border-radius: 6px; padding: 6px; font-size: 9px; cursor: pointer; margin-bottom: 4px; }
+  .prop-pub-btn-wa { width: 100%; background: #25D366; color: #fff; border: none; border-radius: 6px; padding: 6px; font-size: 9px; cursor: pointer; }
+
+  /* FORMULARIO PROPIEDAD */
+  .prop-form { background: #F7F6F3; border-radius: 8px; }
+  .prop-form-steps { display: flex; gap: 0; background: #fff; border-bottom: 0.5px solid #EBEBEB; padding: 0 12px; }
+  .pf-step { padding: 8px 12px; font-size: 10px; color: #9090A8; border-bottom: 2px solid transparent; }
+  .pf-step.active { color: #854F0B; border-bottom-color: #BA7517; font-weight: 500; }
+  .pf-step.done { color: #3B6D11; }
+  .prop-form-body { padding: 12px; display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .pf-field-label { font-size: 9px; color: #9090A8; margin-bottom: 3px; letter-spacing: 0.03em; }
+  .pf-field-input { width: 100%; border: 0.5px solid #D4D0C8; border-radius: 6px; padding: 5px 8px; font-size: 10px; color: #1A1A2E; }
+  .pf-field-input.ai { border-color: #FAC775; background: #FAEEDA; color: #412402; }
+
+  /* IA ONBOARDING */
+  .ia-onboard { background: #F7F6F3; border-radius: 8px; padding: 12px; }
+  .ia-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+  .ia-title { font-size: 12px; font-weight: 500; color: #1A1A2E; }
+  .ia-badge { background: #FAEEDA; color: #854F0B; border: 1px solid #FAC775; border-radius: 20px; padding: 2px 8px; font-size: 9px; font-weight: 600; }
+  .ia-photos { display: grid; grid-template-columns: repeat(4,1fr); gap: 6px; margin-bottom: 10px; }
+  .ia-photo { aspect-ratio: 4/3; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 20px; position: relative; }
+  .ia-photo-check { position: absolute; inset: 0; background: rgba(186,117,23,0.15); display: flex; align-items: center; justify-content: center; border-radius: 6px; }
+  .ia-result-row { display: flex; justify-content: space-between; font-size: 10px; padding: 4px 0; border-bottom: 0.5px solid #EBEBEB; }
+  .ia-result-label { color: #9090A8; }
+  .ia-result-val { font-weight: 500; color: #1A1A2E; display: flex; align-items: center; gap: 4px; }
+  .ia-confidence { font-size: 8px; background: #EAF3DE; color: #3B6D11; padding: 1px 4px; border-radius: 10px; }
+
+  /* LEAD DETALLE */
+  .lead-detail { background: #fff; border-radius: 8px; overflow: hidden; }
+  .lead-detail-hero { background: #F7F6F3; padding: 10px 12px; display: flex; align-items: center; gap: 10px; border-bottom: 0.5px solid #EBEBEB; }
+  .lead-detail-av { width: 36px; height: 36px; border-radius: 10px; background: #FAEEDA; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 600; color: #854F0B; flex-shrink: 0; }
+  .lead-detail-name { font-size: 14px; font-weight: 500; color: #1A1A2E; }
+  .lead-detail-meta { font-size: 9px; color: #9090A8; }
+  .lead-detail-score { background: #FCEBEB; border: 1.5px solid #F7C1C1; border-radius: 50%; width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 600; color: #A32D2D; margin-left: auto; }
+  .lead-detail-tabs { display: flex; border-bottom: 0.5px solid #EBEBEB; padding: 0 12px; }
+  .lead-detail-tab { padding: 6px 10px; font-size: 10px; color: #9090A8; border-bottom: 2px solid transparent; }
+  .lead-detail-tab.active { color: #854F0B; border-bottom-color: #BA7517; font-weight: 500; }
+  .lead-detail-body { padding: 10px 12px; }
+  .lead-detail-row { display: flex; justify-content: space-between; font-size: 10px; padding: 5px 0; border-bottom: 0.5px solid #EBEBEB; }
+  .lead-detail-label { color: #9090A8; }
+  .lead-detail-val { font-weight: 500; color: #1A1A2E; }
+</style>
+</head>
+<body>
+
+<div class="nav">
+  <a href="INDEX.html" class="back">← Índice</a>
+  <span style="color:rgba(255,255,255,0.2)">|</span>
+  <span style="font-size:11px;color:rgba(255,255,255,0.3)">FASE 4</span>
+</div>
+
+<div class="phase-title">🏠 Core del Producto</div>
+<div class="phase-sub">Las pantallas principales que usa el agente todos los días</div>
+
+<div class="screens">
+
+  <!-- DASHBOARD -->
+  <div class="screen-block">
+    <div class="screen-header">
+      <div><div class="screen-num">F4-01</div><div class="screen-name">Dashboard Principal</div></div>
+      <div class="screen-route">/dashboard</div>
+    </div>
+    <div class="screen-preview">
+      <div class="dash">
+        <div class="dash-top"><div class="dash-logo">🌊 InmoIA</div><span style="font-size:9px;color:rgba(255,255,255,0.3);margin-left:auto">Luis Aguilar</span></div>
+        <div class="dash-body">
+          <div class="dash-sidebar">
+            <div class="dash-nav-item active">⬡ Inicio</div>
+            <div class="dash-nav-item">👥 Leads</div>
+            <div class="dash-nav-item">🏠 Props</div>
+            <div class="dash-nav-item">💬 Bot</div>
+          </div>
+          <div class="dash-main">
+            <div class="dash-stats">
+              <div class="dash-stat"><div class="dash-stat-val">23</div><div class="dash-stat-label">LEADS HOY</div></div>
+              <div class="dash-stat"><div class="dash-stat-val">83%</div><div class="dash-stat-label">BOT AUTO</div></div>
+              <div class="dash-stat"><div class="dash-stat-val">6</div><div class="dash-stat-label">VISITAS</div></div>
+              <div class="dash-stat"><div class="dash-stat-val">31</div><div class="dash-stat-label">PROPS</div></div>
+            </div>
+            <div class="dash-alert">🔥 Carlos Mendoza es lead caliente · Score 87/100</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="screen-notes">
+      <strong>Incluye:</strong> 4 stat cards · Alerta de lead caliente · Leads recientes con temperatura · Actividad del chatbot con barra<br>
+      <strong>Sidebar:</strong> Siempre fondo #0F0F1A — nunca cambiar
+    </div>
+  </div>
+
+  <!-- LISTA DE LEADS -->
+  <div class="screen-block">
+    <div class="screen-header">
+      <div><div class="screen-num">F4-02</div><div class="screen-name">Gestión de Leads</div></div>
+      <div class="screen-route">/leads</div>
+    </div>
+    <div class="screen-preview">
+      <div class="leads-table">
+        <div class="leads-top">
+          <input class="leads-search" placeholder="🔍 Buscar leads...">
+          <div class="leads-filter hot">🔥 Calientes</div>
+          <div class="leads-filter">🟡 Tibios</div>
+          <div class="leads-filter">🧊 Fríos</div>
+        </div>
+        <div class="leads-row">
+          <div class="leads-av">CM</div>
+          <div><div class="leads-name">Carlos Mendoza</div><div class="leads-prop">Casa Coyoacán · hace 5 min</div></div>
+          <div class="pill-hot">caliente</div>
+        </div>
+        <div class="leads-row">
+          <div class="leads-av" style="background:#E1F5EE;color:#0F6E56">AT</div>
+          <div><div class="leads-name">Ana Torres</div><div class="leads-prop">Depto Santa Fe · hace 2h</div></div>
+          <div class="pill-warm">tibio</div>
+        </div>
+        <div class="leads-row">
+          <div class="leads-av" style="background:#f0f0f0;color:#9090A8">RS</div>
+          <div><div class="leads-name">Roberto Silva</div><div class="leads-prop">Terreno Huatulco · ayer</div></div>
+          <div class="pill-cold">frío</div>
+        </div>
+      </div>
+    </div>
+    <div class="screen-notes">
+      <strong>Temperatura:</strong> hot 🔥 (score≥75) · warm 🟡 (40-74) · cold 🧊 (&lt;40)<br>
+      <strong>Incluye:</strong> Búsqueda · Filtros · Score IA · Última interacción
+    </div>
+  </div>
+
+  <!-- DETALLE DE LEAD -->
+  <div class="screen-block">
+    <div class="screen-header">
+      <div><div class="screen-num">F4-03</div><div class="screen-name">Detalle de Lead</div></div>
+      <div class="screen-route">/leads/[id]</div>
+    </div>
+    <div class="screen-preview">
+      <div class="lead-detail">
+        <div class="lead-detail-hero">
+          <div class="lead-detail-av">CM</div>
+          <div><div class="lead-detail-name">Carlos Mendoza</div><div class="lead-detail-meta">📱 55 1234 5678 · CDMX</div></div>
+          <div class="lead-detail-score">87</div>
+        </div>
+        <div class="lead-detail-tabs">
+          <div class="lead-detail-tab active">Resumen</div>
+          <div class="lead-detail-tab">Conversación</div>
+          <div class="lead-detail-tab">Props vistas</div>
+          <div class="lead-detail-tab">Tareas</div>
+          <div class="lead-detail-tab">Notas</div>
+        </div>
+        <div class="lead-detail-body">
+          <div class="lead-detail-row"><span class="lead-detail-label">Presupuesto</span><span class="lead-detail-val" style="color:#854F0B">Hasta $6,000,000</span></div>
+          <div class="lead-detail-row"><span class="lead-detail-label">Zona preferida</span><span class="lead-detail-val">Coyoacán, Sur CDMX</span></div>
+          <div class="lead-detail-row"><span class="lead-detail-label">Urgencia</span><span class="lead-detail-val" style="color:#A32D2D">Alta · este mes</span></div>
+          <div class="lead-detail-row"><span class="lead-detail-label">Match con catálogo</span><span class="lead-detail-val" style="color:#3B6D11">Casa Coyoacán ✓</span></div>
+        </div>
+      </div>
+    </div>
+    <div class="screen-notes">
+      <strong>5 tabs:</strong> Resumen · Conversación WhatsApp · Props vistas · Tareas · Notas<br>
+      <strong>IA:</strong> Análisis de Claude con recomendación de acción inmediata
+    </div>
+  </div>
+
+  <!-- LISTA DE PROPIEDADES -->
+  <div class="screen-block">
+    <div class="screen-header">
+      <div><div class="screen-num">F4-04</div><div class="screen-name">Catálogo de Propiedades</div></div>
+      <div class="screen-route">/propiedades</div>
+    </div>
+    <div class="screen-preview">
+      <div style="background:#F7F6F3;border-radius:8px;overflow:hidden">
+        <div style="padding:8px 12px;background:#fff;border-bottom:0.5px solid #EBEBEB;display:flex;gap:6px;align-items:center">
+          <input style="flex:1;border:0.5px solid #D4D0C8;border-radius:6px;padding:5px 8px;font-size:10px" placeholder="🔍 Buscar...">
+          <div style="padding:5px 10px;border-radius:20px;font-size:9px;border:1.5px solid #BA7517;background:#FAEEDA;color:#854F0B">Casa</div>
+          <div style="padding:5px 10px;border-radius:20px;font-size:9px;border:1.5px solid #D4D0C8;color:#9090A8">Terreno</div>
+          <button style="background:#0f0f1a;color:#fff;border:none;border-radius:6px;padding:5px 10px;font-size:9px">+ Nueva</button>
+        </div>
+        <div style="padding:10px;display:grid;grid-template-columns:1fr 1fr;gap:8px">
+          <div style="background:#fff;border-radius:8px;border:0.5px solid #EBEBEB;overflow:hidden">
+            <div style="height:60px;background:linear-gradient(135deg,#8B7355,#C4A882);display:flex;align-items:center;justify-content:center;font-size:24px;position:relative">🏡<div style="position:absolute;top:4px;right:4px;background:#EAF3DE;color:#3B6D11;font-size:7px;font-weight:600;padding:1px 5px;border-radius:10px">ACTIVA</div></div>
+            <div style="padding:6px 8px"><div style="font-size:10px;font-weight:500;color:#1A1A2E">Casa Coyoacán</div><div style="font-size:11px;font-weight:500;color:#854F0B">$5,800,000</div><div style="font-size:8px;color:#9090A8">🔥 15 leads · 18 días</div></div>
+          </div>
+          <div style="background:#fff;border-radius:8px;border:0.5px solid #EBEBEB;overflow:hidden">
+            <div style="height:60px;background:linear-gradient(135deg,#1a5f7a,#2d9cbb);display:flex;align-items:center;justify-content:center;font-size:24px;position:relative">🌊<div style="position:absolute;top:4px;right:4px;background:#FAEEDA;color:#854F0B;font-size:7px;font-weight:600;padding:1px 5px;border-radius:10px">NUEVO</div></div>
+            <div style="padding:6px 8px"><div style="font-size:10px;font-weight:500;color:#1A1A2E">Terreno Huatulco</div><div style="font-size:11px;font-weight:500;color:#854F0B">$2,800,000</div><div style="font-size:8px;color:#9090A8">🔥 8 leads · $140k USD</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="screen-notes">
+      <strong>Incluye:</strong> Búsqueda · Filtros por tipo · Cards con estado · Leads por propiedad<br>
+      <strong>Estados:</strong> Activa (verde) · Pausada (ámbar) · Vendida (azul) · Borrador (gris)
+    </div>
+  </div>
+
+  <!-- NUEVA PROPIEDAD -->
+  <div class="screen-block">
+    <div class="screen-header">
+      <div><div class="screen-num">F4-05</div><div class="screen-name">Nueva Propiedad (Formulario)</div></div>
+      <div class="screen-route">/propiedades/nueva</div>
+    </div>
+    <div class="screen-preview">
+      <div class="prop-form">
+        <div class="prop-form-steps">
+          <div class="pf-step done">✓ Datos</div>
+          <div class="pf-step active">Fotos</div>
+          <div class="pf-step">Descripción</div>
+          <div class="pf-step">Publicar</div>
+        </div>
+        <div class="prop-form-body">
+          <div><div class="pf-field-label">TIPO DE PROPIEDAD</div><input class="pf-field-input" value="Casa"></div>
+          <div><div class="pf-field-label">PRECIO (MXN)</div><input class="pf-field-input" value="$5,800,000"></div>
+          <div><div class="pf-field-label">SUPERFICIE</div><input class="pf-field-input" value="210m²"></div>
+          <div><div class="pf-field-label">RECÁMARAS</div><input class="pf-field-input" value="3"></div>
+          <div style="grid-column:1/-1"><div class="pf-field-label">TÍTULO (detectado por IA ✦)</div><input class="pf-field-input ai" value="Casa con jardín en Coyoacán"></div>
+        </div>
+      </div>
+    </div>
+    <div class="screen-notes">
+      <strong>4 pasos:</strong> Datos básicos → Fotos → Descripción (4 versiones IA) → Publicar<br>
+      <strong>Campos ámbar:</strong> llenados automáticamente por Claude
+    </div>
+  </div>
+
+  <!-- ONBOARDING IA -->
+  <div class="screen-block">
+    <div class="screen-header">
+      <div><div class="screen-num">F4-06</div><div class="screen-name">✦ Onboarding con IA</div></div>
+      <div class="screen-route">/propiedades/nueva (modo IA)</div>
+    </div>
+    <div class="screen-preview">
+      <div class="ia-onboard">
+        <div class="ia-top"><div class="ia-title">✦ Claude analiza tus fotos</div><div class="ia-badge">✦ Claude Vision</div></div>
+        <div class="ia-photos">
+          <div class="ia-photo" style="background:linear-gradient(135deg,#8B7355,#C4A882)">🏡<div class="ia-photo-check"><span style="background:rgba(255,255,255,0.9);border-radius:20px;padding:2px 6px;font-size:8px;color:#854F0B">✓ Lista</span></div></div>
+          <div class="ia-photo" style="background:linear-gradient(135deg,#4a6fa5,#7aa7d4)">🛋️<div class="ia-photo-check"><span style="background:rgba(255,255,255,0.9);border-radius:20px;padding:2px 6px;font-size:8px;color:#854F0B">✓ Lista</span></div></div>
+          <div class="ia-photo" style="background:linear-gradient(135deg,#228B22,#90EE90)">🌿<div style="position:absolute;inset:0;background:rgba(186,117,23,0.2);display:flex;align-items:center;justify-content:center;border-radius:6px"><div style="width:14px;height:14px;border:2px solid rgba(186,117,23,0.3);border-top-color:#BA7517;border-radius:50%;animation:none"></div></div></div>
+          <div class="ia-photo" style="background:linear-gradient(135deg,#C0C0C0,#E8E8E8)">🍳</div>
+        </div>
+        <div class="ia-result-row"><span class="ia-result-label">Tipo detectado</span><span class="ia-result-val">Casa residencial <span class="ia-confidence">97%</span></span></div>
+        <div class="ia-result-row"><span class="ia-result-label">Acabados</span><span class="ia-result-val">Premium <span class="ia-confidence">89%</span></span></div>
+        <div class="ia-result-row"><span class="ia-result-label">Precio estimado</span><span class="ia-result-val" style="color:#BA7517">$5.5M–$6.5M</span></div>
+      </div>
+    </div>
+    <div class="screen-notes">
+      <strong>Flujo:</strong> Sube 3-5 fotos → Claude las analiza → Pre-llena el formulario → Genera 4 descripciones<br>
+      <strong>Tiempo:</strong> 3-5 minutos vs 30 minutos manual — es el diferenciador más grande de InmoIA
+    </div>
+  </div>
+
+  <!-- PÁGINA PÚBLICA -->
+  <div class="screen-block">
+    <div class="screen-header">
+      <div><div class="screen-num">F4-07</div><div class="screen-name">Página Pública de Propiedad</div></div>
+      <div class="screen-route">/p/[slug]</div>
+    </div>
+    <div class="screen-preview">
+      <div class="prop-pub">
+        <div class="prop-pub-nav">
+          <div class="prop-pub-logo">🌊 Agencia Aguilar</div>
+          <div style="display:flex;gap:4px">
+            <div style="background:#F7F6F3;border:0.5px solid #D4D0C8;border-radius:4px;padding:2px 6px;font-size:9px;cursor:pointer">🇲🇽 ES</div>
+            <div style="background:#F7F6F3;border:0.5px solid #D4D0C8;border-radius:4px;padding:2px 6px;font-size:9px;cursor:pointer">🇺🇸 EN</div>
+          </div>
+        </div>
+        <div class="prop-pub-img">🏡</div>
+        <div class="prop-pub-body">
+          <div class="prop-pub-main">
+            <div class="prop-pub-type">CASA EN VENTA</div>
+            <div class="prop-pub-title">Casa con jardín en Coyoacán</div>
+            <div class="prop-pub-price">$5,800,000</div>
+            <div style="font-size:9px;color:#9090A8;margin-top:4px">📐 210m² · 🛏 3 rec · 🚿 2 baños</div>
+          </div>
+          <div class="prop-pub-side">
+            <button class="prop-pub-btn">📅 Agendar</button>
+            <button class="prop-pub-btn-wa">W WhatsApp</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="screen-notes">
+      <strong>Bilingüe:</strong> Toggle 🇲🇽/🇺🇸 cambia todo el contenido al instante<br>
+      <strong>Incluye:</strong> Galería · Stats · Descripción · Amenidades · Mapa zona aproximada · Props similares<br>
+      <strong>Privacidad:</strong> Dirección exacta solo se revela al confirmar interés
+    </div>
+  </div>
+
+</div>
+
+<div style="margin-top:32px;padding:16px 20px;background:rgba(255,255,255,0.02);border-radius:10px;border:0.5px solid rgba(255,255,255,0.06);font-size:11px;color:rgba(255,255,255,0.3);text-align:center">
+  <a href="fase3-publico.html" style="color:#BA7517;text-decoration:none">← Fase 3: Públicos</a>
+  &nbsp;·&nbsp;
+  <a href="INDEX.html" style="color:#BA7517;text-decoration:none">Índice</a>
+  &nbsp;·&nbsp;
+  <a href="fase5-chatbot.html" style="color:#BA7517;text-decoration:none">Fase 5: Chatbot →</a>
+</div>
+
+</body>
+</html>

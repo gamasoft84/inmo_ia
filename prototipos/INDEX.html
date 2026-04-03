@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>InmoIA — Índice de Prototipos</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #0f0f1a; color: #fff; min-height: 100vh; padding: 40px 20px; }
+  .header { text-align: center; margin-bottom: 48px; }
+  .logo { font-size: 32px; font-weight: 600; color: #BA7517; margin-bottom: 8px; }
+  .subtitle { font-size: 14px; color: rgba(255,255,255,0.4); }
+  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; max-width: 1000px; margin: 0 auto; }
+  .phase-card { background: rgba(255,255,255,0.04); border: 0.5px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 20px; text-decoration: none; color: inherit; transition: all 0.2s; display: block; }
+  .phase-card:hover { background: rgba(186,117,23,0.1); border-color: #BA7517; transform: translateY(-2px); }
+  .phase-num { font-size: 11px; color: #BA7517; font-weight: 600; letter-spacing: 0.06em; margin-bottom: 8px; }
+  .phase-title { font-size: 16px; font-weight: 500; margin-bottom: 6px; }
+  .phase-desc { font-size: 12px; color: rgba(255,255,255,0.4); line-height: 1.5; margin-bottom: 14px; }
+  .phase-count { font-size: 11px; color: rgba(255,255,255,0.3); display: flex; align-items: center; gap: 6px; }
+  .dot { width: 6px; height: 6px; border-radius: 50%; background: #BA7517; }
+  .tip { max-width: 700px; margin: 40px auto 0; background: rgba(186,117,23,0.08); border: 0.5px solid rgba(186,117,23,0.3); border-radius: 10px; padding: 16px 20px; font-size: 12px; color: rgba(255,255,255,0.6); line-height: 1.7; }
+  .tip strong { color: #BA7517; }
+</style>
+</head>
+<body>
+  <div class="header">
+    <div class="logo">InmoIA — Prototipos</div>
+    <div class="subtitle">Gamasoft IA Technologies · Referencia visual para Claude Code</div>
+  </div>
+
+  <div class="grid">
+    <a href="fase1-setup.html" class="phase-card">
+      <div class="phase-num">FASE 1</div>
+      <div class="phase-title">⚙️ Setup del proyecto</div>
+      <div class="phase-desc">Next.js · Tailwind · Variables CSS · Supabase · Auth · PWA · Checklist completo</div>
+      <div class="phase-count"><div class="dot"></div>8 pasos + checklist</div>
+    </a>
+    <a href="fase2-layout.html" class="phase-card">
+      <div class="phase-num">FASE 2</div>
+      <div class="phase-title">🧩 Layout y componentes UI</div>
+      <div class="phase-desc">Sidebar · Topbar · Bottom Nav · Botones · Inputs · Cards · Toggles · Chips · Avatares</div>
+      <div class="phase-count"><div class="dot"></div>11 componentes visuales</div>
+    </a>
+    <a href="fase3-publico.html" class="phase-card">
+      <div class="phase-num">FASE 3</div>
+      <div class="phase-title">🌐 Flujos públicos</div>
+      <div class="phase-desc">Landing page, Login, Registro, Onboarding, 404, Términos</div>
+      <div class="phase-count"><div class="dot"></div>6 pantallas</div>
+    </a>
+    <a href="fase4-core.html" class="phase-card">
+      <div class="phase-num">FASE 4</div>
+      <div class="phase-title">🏠 Core del producto</div>
+      <div class="phase-desc">Dashboard, Propiedades, Nueva propiedad con IA, Leads, Detalle de lead</div>
+      <div class="phase-count"><div class="dot"></div>7 pantallas</div>
+    </a>
+    <a href="fase5-chatbot.html" class="phase-card">
+      <div class="phase-num">FASE 5 ⭐</div>
+      <div class="phase-title">💬 Chatbot WhatsApp</div>
+      <div class="phase-desc">Conversaciones, Configuración del bot (5 tabs), Alertas, Horarios</div>
+      <div class="phase-count"><div class="dot"></div>3 pantallas</div>
+    </a>
+    <a href="fase6-avanzado.html" class="phase-card">
+      <div class="phase-num">FASE 6</div>
+      <div class="phase-title">📊 Funciones avanzadas</div>
+      <div class="phase-desc">Calendario, Agendar visita, Notificaciones, Reportes, PDF, Comparar props y leads</div>
+      <div class="phase-count"><div class="dot"></div>8 pantallas</div>
+    </a>
+    <a href="fase7-config.html" class="phase-card">
+      <div class="phase-num">FASE 7</div>
+      <div class="phase-title">⚙️ Configuración y marca</div>
+      <div class="phase-desc">Perfil del agente, Marca blanca, Selector de temas, Ayuda, Límites</div>
+      <div class="phase-count"><div class="dot"></div>6 pantallas</div>
+    </a>
+    <a href="fase8-admin.html" class="phase-card">
+      <div class="phase-num">FASE 8</div>
+      <div class="phase-title">👑 Admin y pagos</div>
+      <div class="phase-desc">Panel Super Admin, Gestión de agencias, Cobros, Conversión trial a pago</div>
+      <div class="phase-count"><div class="dot"></div>7 pantallas</div>
+    </a>
+    <a href="movil.html" class="phase-card">
+      <div class="phase-num">MÓVIL</div>
+      <div class="phase-title">📱 iPhone (PWA)</div>
+      <div class="phase-desc">Dashboard, Leads, Chatbot y Propiedades adaptados para iPhone 15 Pro Max</div>
+      <div class="phase-count"><div class="dot"></div>4 pantallas</div>
+    </a>
+    <a href="errores.html" class="phase-card">
+      <div class="phase-num">GLOBAL</div>
+      <div class="phase-title">🔴 Errores y estados vacíos</div>
+      <div class="phase-desc">Empty states, errores, skeleton loaders, toasts — usados en todas las fases</div>
+      <div class="phase-count"><div class="dot"></div>4 tipos</div>
+    </a>
+  </div>
+
+  <div class="tip">
+    <strong>Cómo usar estos archivos en VS Code + Claude Code:</strong><br>
+    1. Abre este archivo en Live Server (extensión de VS Code) o en tu navegador<br>
+    2. Navega a la fase que estás construyendo<br>
+    3. Toma screenshot de la pantalla que necesitas (Cmd+Shift+4 en Mac)<br>
+    4. Adjunta el screenshot en Claude Code: <em>"Construye esta pantalla exactamente"</em><br>
+    5. Claude Code replica el diseño con el Design System de InmoIA
+  </div>
+</body>
+</html>

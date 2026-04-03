@@ -1,0 +1,480 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>InmoIA · Fase 2 — Layout y Componentes UI</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #0f0f1a; color: #fff; padding: 32px 20px; }
+  .nav { display: flex; align-items: center; gap: 12px; margin-bottom: 32px; }
+  .back { color: #BA7517; text-decoration: none; font-size: 12px; }
+  .phase-title { font-size: 22px; font-weight: 500; }
+  .phase-sub { font-size: 13px; color: rgba(255,255,255,0.4); margin-top: 4px; margin-bottom: 28px; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 20px; }
+  .card { background: rgba(255,255,255,0.03); border: 0.5px solid rgba(255,255,255,0.08); border-radius: 12px; overflow: hidden; }
+  .card-header { padding: 14px 16px; border-bottom: 0.5px solid rgba(255,255,255,0.06); display: flex; align-items: center; justify-content: space-between; }
+  .card-num { font-size: 10px; color: #BA7517; font-weight: 600; letter-spacing: 0.05em; }
+  .card-name { font-size: 13px; font-weight: 500; margin-top: 2px; }
+  .card-body { padding: 16px; }
+  .card-notes { padding: 10px 16px; background: rgba(186,117,23,0.06); border-top: 0.5px solid rgba(186,117,23,0.15); font-size: 11px; color: rgba(255,255,255,0.4); line-height: 1.6; }
+  .card-notes strong { color: #BA7517; }
+
+  /* PREVIEWS DE COMPONENTES */
+
+  /* SIDEBAR */
+  .sidebar-preview { background: #0f0f1a; border-radius: 8px; padding: 10px 0; width: 160px; }
+  .sb-logo { display: flex; align-items: center; gap: 6px; padding: 6px 14px 12px; }
+  .sb-logo-icon { width: 22px; height: 22px; border-radius: 6px; background: #FAEEDA; display: flex; align-items: center; justify-content: center; font-size: 11px; }
+  .sb-logo-name { font-size: 12px; font-weight: 500; color: #fff; }
+  .sb-section { font-size: 8px; color: rgba(255,255,255,0.2); letter-spacing: 0.08em; padding: 8px 14px 3px; text-transform: uppercase; }
+  .sb-item { display: flex; align-items: center; gap: 8px; padding: 7px 10px; margin: 1px 6px; border-radius: 7px; font-size: 11px; color: rgba(255,255,255,0.4); border-left: 2px solid transparent; cursor: pointer; }
+  .sb-item.active { background: rgba(255,255,255,0.07); color: #fff; font-weight: 500; border-left-color: #BA7517; }
+  .sb-item:hover:not(.active) { background: rgba(255,255,255,0.04); color: rgba(255,255,255,0.7); }
+  .sb-item-icon { font-size: 13px; }
+
+  /* TOPBAR */
+  .topbar-preview { background: #fff; border-radius: 8px; padding: 10px 14px; display: flex; align-items: center; gap: 10px; border: 0.5px solid #EBEBEB; }
+  .tb-title { font-size: 13px; font-weight: 500; color: #1A1A2E; }
+  .tb-search { flex: 1; background: #F7F6F3; border: 0.5px solid #EBEBEB; border-radius: 20px; padding: 5px 10px; font-size: 10px; color: #9090A8; }
+  .tb-notif { width: 28px; height: 28px; border-radius: 8px; background: #F7F6F3; display: flex; align-items: center; justify-content: center; font-size: 13px; cursor: pointer; position: relative; }
+  .tb-notif-badge { position: absolute; top: -3px; right: -3px; width: 13px; height: 13px; border-radius: 50%; background: #BA7517; color: #fff; font-size: 7px; font-weight: 700; display: flex; align-items: center; justify-content: center; border: 1.5px solid #fff; }
+  .tb-av { width: 28px; height: 28px; border-radius: 8px; background: #FAEEDA; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 600; color: #854F0B; }
+
+  /* BOTTOM NAV */
+  .bnav-preview { background: #fff; border-radius: 8px; border: 0.5px solid #EBEBEB; display: flex; }
+  .bn-item { flex: 1; padding: 8px 4px; text-align: center; cursor: pointer; }
+  .bn-icon { font-size: 16px; }
+  .bn-label { font-size: 8px; color: #9090A8; margin-top: 2px; }
+  .bn-item.active .bn-label { color: #BA7517; }
+  .bn-item.active { border-top: 2px solid #BA7517; }
+
+  /* BOTONES */
+  .btns-preview { display: flex; flex-direction: column; gap: 6px; }
+  .btn-p { padding: 8px 14px; border-radius: 8px; font-size: 11px; font-weight: 500; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; border: none; }
+  .btn-primary  { background: #0f0f1a; color: #fff; }
+  .btn-brand    { background: #BA7517; color: #fff; }
+  .btn-soft     { background: #FAEEDA; color: #412402; border: 1.5px solid #FAC775 !important; }
+  .btn-ghost    { background: none; color: #4A4A6A; border: 0.5px solid #D4D0C8 !important; }
+  .btn-danger   { background: #FCEBEB; color: #A32D2D; border: 1.5px solid #F7C1C1 !important; }
+  .btn-wa       { background: #25D366; color: #fff; }
+  .btn-row      { display: flex; gap: 6px; flex-wrap: wrap; }
+
+  /* INPUTS */
+  .inputs-preview { display: flex; flex-direction: column; gap: 8px; }
+  .inp { border: 0.5px solid #D4D0C8; border-radius: 8px; padding: 7px 10px; font-size: 11px; color: #1A1A2E; background: #fff; width: 100%; }
+  .inp:focus { outline: none; border-color: #BA7517; }
+  .inp.ai { border-color: #FAC775; background: #FAEEDA; color: #412402; }
+  .inp.error { border-color: #F7C1C1; background: #fff; }
+  .inp-label { font-size: 9px; color: #9090A8; letter-spacing: 0.03em; display: block; margin-bottom: 3px; }
+
+  /* CARDS */
+  .cards-preview { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+  .card-p { border-radius: 10px; padding: 10px; border: 0.5px solid transparent; }
+  .card-default { background: #fff; border-color: #EBEBEB; }
+  .card-brand-p { background: #FAEEDA; border-color: #FAC775; }
+  .card-dark-p  { background: #0f0f1a; color: #fff; }
+  .card-success-p { background: #EAF3DE; border-color: #C0DD97; }
+  .card-p-label { font-size: 8px; font-weight: 600; letter-spacing: 0.05em; margin-bottom: 5px; }
+  .card-p-title { font-size: 11px; font-weight: 500; margin-bottom: 2px; }
+  .card-p-sub { font-size: 9px; }
+
+  /* TOGGLE */
+  .toggle-preview { display: flex; flex-direction: column; gap: 8px; background: #fff; border-radius: 8px; padding: 10px; }
+  .toggle-row { display: flex; align-items: center; justify-content: space-between; }
+  .toggle-label { font-size: 11px; color: #1A1A2E; }
+  .tog { display: flex; align-items: center; gap: 5px; }
+  .tog-track { width: 38px; height: 21px; border-radius: 11px; border: 1.5px solid #D4D0C8; background: #F7F6F3; position: relative; cursor: pointer; }
+  .tog-track.on { background: #BA7517; border-color: #BA7517; }
+  .tog-knob { position: absolute; top: 2px; left: 2px; width: 13px; height: 13px; border-radius: 50%; background: #D4D0C8; }
+  .tog-track.on .tog-knob { left: 21px; background: #fff; }
+  .tog-text { font-size: 9px; font-weight: 500; color: #9090A8; }
+  .tog-track.on + .tog-text { color: #854F0B; }
+
+  /* CHIPS */
+  .chips-preview { display: flex; flex-wrap: wrap; gap: 5px; background: #fff; padding: 10px; border-radius: 8px; }
+  .chip-p { padding: 4px 10px; border-radius: 20px; font-size: 10px; border: 1.5px solid #D4D0C8; color: #9090A8; cursor: pointer; }
+  .chip-p.on { background: #FAEEDA; border-color: #BA7517; color: #412402; font-weight: 500; }
+
+  /* PILLS */
+  .pills-preview { display: flex; gap: 5px; flex-wrap: wrap; }
+  .pill-p { font-size: 9px; font-weight: 600; padding: 3px 8px; border-radius: 20px; }
+
+  /* AVATAR */
+  .avatars-preview { display: flex; gap: 8px; align-items: center; background: #fff; padding: 10px; border-radius: 8px; }
+  .av { border-radius: 8px; display: flex; align-items: center; justify-content: center; font-weight: 600; background: #FAEEDA; color: #854F0B; border: 1.5px solid #FAC775; }
+  .av-sm { width: 26px; height: 26px; font-size: 9px; }
+  .av-md { width: 34px; height: 34px; font-size: 12px; border-radius: 10px; }
+  .av-lg { width: 42px; height: 42px; font-size: 15px; border-radius: 12px; }
+  .av-xl { width: 54px; height: 54px; font-size: 20px; border-radius: 14px; }
+
+  /* EMPTY STATE */
+  .empty-preview { background: #fff; border-radius: 8px; padding: 20px; text-align: center; }
+  .empty-icon { font-size: 32px; margin-bottom: 8px; }
+  .empty-title { font-size: 12px; font-weight: 500; color: #1A1A2E; margin-bottom: 4px; }
+  .empty-desc { font-size: 10px; color: #9090A8; margin-bottom: 12px; line-height: 1.5; }
+
+  /* SKELETON */
+  .skeleton-preview { background: #fff; border-radius: 8px; padding: 10px; display: flex; flex-direction: column; gap: 7px; }
+  .skel { background: #F0EDE8; border-radius: 5px; animation: shimmer 1.5s ease infinite; }
+  @keyframes shimmer { 0%,100%{opacity:0.5} 50%{opacity:1} }
+
+  /* FAB */
+  .fab-preview { background: #F7F6F3; border-radius: 8px; padding: 14px; display: flex; align-items: flex-end; justify-content: flex-end; min-height: 80px; position: relative; }
+  .fab { width: 42px; height: 42px; border-radius: 50%; background: #BA7517; box-shadow: 0 4px 12px rgba(186,117,23,0.4); display: flex; align-items: center; justify-content: center; font-size: 20px; color: #fff; cursor: pointer; }
+</style>
+</head>
+<body>
+
+<div class="nav">
+  <a href="INDEX.html" class="back">← Índice</a>
+  <span style="color:rgba(255,255,255,0.2)">|</span>
+  <span style="font-size:11px;color:rgba(255,255,255,0.3)">FASE 2</span>
+</div>
+
+<div class="phase-title">🧩 Fase 2 — Layout y Componentes UI</div>
+<div class="phase-sub">Sidebar · Topbar · Bottom Nav · Todos los componentes base</div>
+
+<div class="grid">
+
+  <!-- SIDEBAR -->
+  <div class="card">
+    <div class="card-header">
+      <div><div class="card-num">F2-01</div><div class="card-name">Sidebar (siempre oscuro)</div></div>
+      <span style="font-size:9px;color:#A32D2D;background:#FCEBEB;padding:2px 7px;border-radius:20px">⚠️ Fondo SIEMPRE #0F0F1A</span>
+    </div>
+    <div class="card-body">
+      <div style="display:flex;gap:12px;align-items:flex-start">
+        <div class="sidebar-preview">
+          <div class="sb-logo"><div class="sb-logo-icon">🌊</div><div class="sb-logo-name">InmoIA</div></div>
+          <div class="sb-section">Principal</div>
+          <div class="sb-item active"><span class="sb-item-icon">⬡</span>Dashboard</div>
+          <div class="sb-item"><span class="sb-item-icon">👥</span>Leads</div>
+          <div class="sb-item"><span class="sb-item-icon">🏠</span>Propiedades</div>
+          <div class="sb-item"><span class="sb-item-icon">💬</span>Chatbot</div>
+          <div class="sb-section">Reportes</div>
+          <div class="sb-item"><span class="sb-item-icon">📊</span>Analítica</div>
+          <div class="sb-item"><span class="sb-item-icon">📅</span>Calendario</div>
+          <div style="margin-top:auto;padding:8px 14px;border-top:0.5px solid rgba(255,255,255,0.06)">
+            <div class="sb-item"><span class="sb-item-icon">⚙️</span>Configuración</div>
+          </div>
+        </div>
+        <div style="flex:1;font-size:10px;color:rgba(255,255,255,0.4);line-height:1.9">
+          <div style="color:#BA7517;font-weight:500;margin-bottom:6px">Reglas CSS:</div>
+          <div>background: <span style="color:#FAC775">#0F0F1A</span></div>
+          <div>width: <span style="color:#7EC8E3">220px</span></div>
+          <div>Item activo:</div>
+          <div style="padding-left:8px">border-left: <span style="color:#FAC775">2px #BA7517</span></div>
+          <div style="padding-left:8px">bg: <span style="color:#FAC775">rgba(fff,0.07)</span></div>
+          <div>Item hover:</div>
+          <div style="padding-left:8px">bg: <span style="color:#FAC775">rgba(fff,0.04)</span></div>
+          <div style="margin-top:8px;color:#A32D2D">NUNCA cambiar<br>el fondo del sidebar</div>
+        </div>
+      </div>
+    </div>
+    <div class="card-notes">
+      <strong>Archivo:</strong> components/layout/Sidebar.tsx<br>
+      <strong>Mobile:</strong> En pantallas &lt;768px se oculta completamente — usar Bottom Nav en su lugar
+    </div>
+  </div>
+
+  <!-- TOPBAR -->
+  <div class="card">
+    <div class="card-header">
+      <div><div class="card-num">F2-02</div><div class="card-name">Topbar</div></div>
+    </div>
+    <div class="card-body">
+      <div class="topbar-preview">
+        <div class="tb-title">Dashboard</div>
+        <div class="tb-search">🔍 Buscar...</div>
+        <div class="tb-notif">🔔<div class="tb-notif-badge">3</div></div>
+        <div class="tb-av">LA</div>
+      </div>
+      <div style="margin-top:10px;font-size:10px;color:rgba(255,255,255,0.4);line-height:1.8">
+        height: 52px · border-bottom: 0.5px solid var(--border-tertiary)<br>
+        background: var(--bg-primary) · padding: 0 20px
+      </div>
+    </div>
+    <div class="card-notes">
+      <strong>Archivo:</strong> components/layout/Topbar.tsx<br>
+      <strong>Badge rojo:</strong> Notificaciones no leídas · Click abre panel de notificaciones
+    </div>
+  </div>
+
+  <!-- BOTTOM NAV -->
+  <div class="card">
+    <div class="card-header">
+      <div><div class="card-num">F2-03</div><div class="card-name">Bottom Navigation (móvil)</div></div>
+      <span style="font-size:9px;color:#185FA5;background:#E6F1FB;padding:2px 7px;border-radius:20px">Solo &lt;768px</span>
+    </div>
+    <div class="card-body">
+      <div class="bnav-preview">
+        <div class="bn-item active"><div class="bn-icon">⬡</div><div class="bn-label" style="color:#BA7517">Inicio</div></div>
+        <div class="bn-item"><div class="bn-icon">👥</div><div class="bn-label">Leads</div></div>
+        <div class="bn-item"><div class="bn-icon">🏠</div><div class="bn-label">Props</div></div>
+        <div class="bn-item"><div class="bn-icon">💬</div><div class="bn-label">Bot</div></div>
+        <div class="bn-item"><div class="bn-icon">⚙️</div><div class="bn-label">Más</div></div>
+      </div>
+      <div class="fab-preview">
+        <span style="font-size:10px;color:rgba(255,255,255,0.3);position:absolute;top:10px;left:10px">FAB (+) para crear</span>
+        <div class="fab">+</div>
+      </div>
+    </div>
+    <div class="card-notes">
+      <strong>Archivo:</strong> components/layout/BottomNav.tsx + FAB.tsx<br>
+      <strong>FAB:</strong> Aparece en /leads (nuevo lead), /propiedades (nueva prop), /chatbot (nuevo msg)
+    </div>
+  </div>
+
+  <!-- BOTONES -->
+  <div class="card">
+    <div class="card-header">
+      <div><div class="card-num">F2-04</div><div class="card-name">Botones — todas las variantes</div></div>
+    </div>
+    <div class="card-body">
+      <div class="btns-preview">
+        <div style="font-size:9px;color:rgba(255,255,255,0.3);margin-bottom:2px">JERARQUÍA (de mayor a menor importancia)</div>
+        <div class="btn-row">
+          <button class="btn-p btn-primary">Publicar propiedad</button>
+          <span style="font-size:9px;color:rgba(255,255,255,0.3);align-self:center">← Solo 1 por pantalla</span>
+        </div>
+        <div class="btn-row">
+          <button class="btn-p btn-soft">✦ Generar descripción</button>
+          <span style="font-size:9px;color:rgba(255,255,255,0.3);align-self:center">← Funciones IA</span>
+        </div>
+        <div class="btn-row">
+          <button class="btn-p btn-ghost">Cancelar</button>
+          <button class="btn-p btn-ghost">Vista previa</button>
+          <span style="font-size:9px;color:rgba(255,255,255,0.3);align-self:center">← Secundarios</span>
+        </div>
+        <div class="btn-row">
+          <button class="btn-p btn-danger">Eliminar propiedad</button>
+          <span style="font-size:9px;color:rgba(255,255,255,0.3);align-self:center">← Pedir confirmación</span>
+        </div>
+        <div class="btn-row">
+          <button class="btn-p btn-wa">W Enviar WhatsApp</button>
+          <span style="font-size:9px;color:rgba(255,255,255,0.3);align-self:center">← Solo para WA</span>
+        </div>
+      </div>
+    </div>
+    <div class="card-notes">
+      <strong>Tamaños:</strong> sm (10px · 4px 10px) · md (11px · 8px 16px) · lg (13px · 10px 24px)<br>
+      <strong>Hover:</strong> opacity 0.88 en todos · transition: 150ms ease
+    </div>
+  </div>
+
+  <!-- INPUTS -->
+  <div class="card">
+    <div class="card-header">
+      <div><div class="card-num">F2-05</div><div class="card-name">Inputs, Select, Textarea</div></div>
+    </div>
+    <div class="card-body">
+      <div style="background:#fff;border-radius:8px;padding:10px;display:flex;flex-direction:column;gap:10px">
+        <div>
+          <span class="inp-label">CAMPO NORMAL</span>
+          <input class="inp" placeholder="Ej: Casa Coyoacán">
+        </div>
+        <div>
+          <span class="inp-label">CAMPO CON FOCO (border brand)</span>
+          <input class="inp" value="Casa con jardín" style="border-color:#BA7517">
+        </div>
+        <div>
+          <span class="inp-label">CAMPO LLENADO POR IA ✦</span>
+          <input class="inp ai" value="Casa residencial contemporánea">
+        </div>
+        <div>
+          <span class="inp-label">CAMPO CON ERROR</span>
+          <input class="inp error" value="precio invalido" style="border-color:#F7C1C1">
+          <span style="font-size:9px;color:#A32D2D;margin-top:3px;display:block">El precio debe ser un número</span>
+        </div>
+      </div>
+    </div>
+    <div class="card-notes">
+      <strong>Campo IA (ámbar):</strong> Indica que Claude lo detectó automáticamente · El agente puede editarlo<br>
+      <strong>border:</strong> 0.5px solid — NUNCA 1px · outline: none en todos los estados
+    </div>
+  </div>
+
+  <!-- CARDS -->
+  <div class="card">
+    <div class="card-header">
+      <div><div class="card-num">F2-06</div><div class="card-name">Cards — variantes</div></div>
+    </div>
+    <div class="card-body">
+      <div class="cards-preview">
+        <div class="card-p card-default">
+          <div class="card-p-label" style="color:#9090A8">CARD DEFAULT</div>
+          <div class="card-p-title" style="color:#1A1A2E">Título del card</div>
+          <div class="card-p-sub" style="color:#9090A8">bg-primary · border-tertiary</div>
+        </div>
+        <div class="card-p card-brand-p">
+          <div class="card-p-label" style="color:#854F0B">CARD BRAND</div>
+          <div class="card-p-title" style="color:#412402">Información IA</div>
+          <div class="card-p-sub" style="color:#854F0B">brand-light · brand-border</div>
+        </div>
+        <div class="card-p card-dark-p">
+          <div class="card-p-label" style="color:rgba(255,255,255,0.3)">CARD DARK</div>
+          <div class="card-p-title" style="color:#fff">Stats destacados</div>
+          <div class="card-p-sub" style="color:rgba(255,255,255,0.4)">#0F0F1A · rgba(fff,0.06)</div>
+        </div>
+        <div class="card-p card-success-p">
+          <div class="card-p-label" style="color:#3B6D11">CARD SUCCESS</div>
+          <div class="card-p-title" style="color:#3B6D11">Estado positivo</div>
+          <div class="card-p-sub" style="color:#3B6D11">success-light · success-border</div>
+        </div>
+      </div>
+    </div>
+    <div class="card-notes">
+      <strong>border-radius:</strong> 12px siempre (--radius-lg) · padding: 16px default<br>
+      <strong>border:</strong> 0.5px solid — NUNCA 1px
+    </div>
+  </div>
+
+  <!-- TOGGLE -->
+  <div class="card">
+    <div class="card-header">
+      <div><div class="card-num">F2-07</div><div class="card-name">Toggles (switches)</div></div>
+    </div>
+    <div class="card-body">
+      <div class="toggle-preview">
+        <div class="toggle-row">
+          <div class="toggle-label">Bot activo 24/7</div>
+          <div class="tog"><div class="tog-track on"><div class="tog-knob"></div></div><span class="tog-text" style="color:#854F0B">Sí</span></div>
+        </div>
+        <div class="toggle-row">
+          <div class="toggle-label" style="color:#1A1A2E">Modo oscuro</div>
+          <div class="tog"><div class="tog-track"><div class="tog-knob"></div></div><span class="tog-text">No</span></div>
+        </div>
+        <div class="toggle-row">
+          <div class="toggle-label" style="color:#1A1A2E">Detectar idioma IA</div>
+          <div class="tog"><div class="tog-track on"><div class="tog-knob"></div></div><span class="tog-text" style="color:#854F0B">Sí</span></div>
+        </div>
+      </div>
+    </div>
+    <div class="card-notes">
+      <strong>ON:</strong> background brand · knob a la derecha · texto "Sí" en brand-dark<br>
+      <strong>OFF:</strong> background secondary · knob a la izquierda · texto "No" en tertiary<br>
+      <strong>Animación:</strong> transition 200ms ease en track y knob
+    </div>
+  </div>
+
+  <!-- CHIPS Y PILLS -->
+  <div class="card">
+    <div class="card-header">
+      <div><div class="card-num">F2-08</div><div class="card-name">Chips y Pills</div></div>
+    </div>
+    <div class="card-body" style="display:flex;flex-direction:column;gap:10px">
+      <div>
+        <div style="font-size:9px;color:rgba(255,255,255,0.3);margin-bottom:6px">CHIPS — clickeables (on/off)</div>
+        <div class="chips-preview">
+          <div class="chip-p on">🌿 Jardín</div>
+          <div class="chip-p on">🍳 Cocina integral</div>
+          <div class="chip-p">🏊 Alberca</div>
+          <div class="chip-p">🚗 Estacionamiento</div>
+          <div class="chip-p on">☀️ Luz natural</div>
+          <div class="chip-p">🔒 Seguridad</div>
+        </div>
+      </div>
+      <div>
+        <div style="font-size:9px;color:rgba(255,255,255,0.3);margin-bottom:6px">PILLS — solo visual (temperatura leads)</div>
+        <div class="pills-preview">
+          <div class="pill-p" style="background:#FCEBEB;color:#A32D2D">🔥 Caliente</div>
+          <div class="pill-p" style="background:#FAEEDA;color:#854F0B">🟡 Tibio</div>
+          <div class="pill-p" style="background:#f0f0f0;color:#9090A8">🧊 Frío</div>
+          <div class="pill-p" style="background:#EAF3DE;color:#3B6D11">✅ Activa</div>
+          <div class="pill-p" style="background:#E6F1FB;color:#185FA5">Trial</div>
+        </div>
+      </div>
+    </div>
+    <div class="card-notes">
+      <strong>Chips:</strong> Con estado activo/inactivo · usados en amenidades, filtros, idiomas<br>
+      <strong>Pills:</strong> Solo visuales, sin click · usados en estado de leads y propiedades
+    </div>
+  </div>
+
+  <!-- AVATARES -->
+  <div class="card">
+    <div class="card-header">
+      <div><div class="card-num">F2-09</div><div class="card-name">Avatares</div></div>
+    </div>
+    <div class="card-body">
+      <div class="avatars-preview">
+        <div><div class="av av-sm">LA</div><div style="font-size:8px;color:#9090A8;text-align:center;margin-top:4px">sm 26px</div></div>
+        <div><div class="av av-md">LA</div><div style="font-size:8px;color:#9090A8;text-align:center;margin-top:4px">md 34px</div></div>
+        <div><div class="av av-lg">LA</div><div style="font-size:8px;color:#9090A8;text-align:center;margin-top:4px">lg 42px</div></div>
+        <div><div class="av av-xl">LA</div><div style="font-size:8px;color:#9090A8;text-align:center;margin-top:4px">xl 54px</div></div>
+        <div><div class="av av-lg" style="border-radius:50%;background:#25D366;color:#fff;border-color:#1DA851">S</div><div style="font-size:8px;color:#9090A8;text-align:center;margin-top:4px">round (WA)</div></div>
+      </div>
+      <div style="margin-top:10px;font-size:10px;color:rgba(255,255,255,0.4);line-height:1.8">
+        Iniciales del nombre · bg: brand-light · color: brand-dark<br>
+        border: 1.5px solid brand-border · border-radius: radius-md<br>
+        Avatar redondo: solo para el bot de WhatsApp
+      </div>
+    </div>
+    <div class="card-notes">
+      <strong>Iniciales:</strong> Primeras 2 letras del nombre (ej: "Luis Aguilar" → "LA")<br>
+      <strong>Colores por agente:</strong> Cada agente puede tener su propio color de avatar
+    </div>
+  </div>
+
+  <!-- EMPTY STATE -->
+  <div class="card">
+    <div class="card-header">
+      <div><div class="card-num">F2-10</div><div class="card-name">Empty States</div></div>
+    </div>
+    <div class="card-body">
+      <div class="empty-preview">
+        <div class="empty-icon">🏠</div>
+        <div class="empty-title">Tu catálogo está vacío</div>
+        <div class="empty-desc">Agrega tu primera propiedad y el bot empezará a responder preguntas sobre ella.</div>
+        <button class="btn-p btn-soft" style="margin:0 auto">✦ Nueva propiedad con IA</button>
+      </div>
+    </div>
+    <div class="card-notes">
+      <strong>Estructura fija:</strong> Emoji grande (32-36px) · Título · Descripción ≤2 líneas · btn-brand o btn-brand-soft<br>
+      <strong>Empty states por sección:</strong> 👥 Sin leads · 🏠 Sin props · 💬 Sin conversaciones · 📅 Sin visitas · 🔔 Sin notifs
+    </div>
+  </div>
+
+  <!-- SKELETON -->
+  <div class="card">
+    <div class="card-header">
+      <div><div class="card-num">F2-11</div><div class="card-name">Skeleton Loaders</div></div>
+    </div>
+    <div class="card-body">
+      <div class="skeleton-preview">
+        <div style="display:flex;gap:8px;align-items:center">
+          <div class="skel" style="width:34px;height:34px;border-radius:10px;flex-shrink:0"></div>
+          <div style="flex:1"><div class="skel" style="height:10px;width:55%;margin-bottom:5px"></div><div class="skel" style="height:8px;width:35%"></div></div>
+          <div class="skel" style="width:44px;height:18px;border-radius:20px"></div>
+        </div>
+        <div style="display:flex;gap:8px;align-items:center">
+          <div class="skel" style="width:34px;height:34px;border-radius:10px;flex-shrink:0"></div>
+          <div style="flex:1"><div class="skel" style="height:10px;width:45%;margin-bottom:5px"></div><div class="skel" style="height:8px;width:30%"></div></div>
+          <div class="skel" style="width:44px;height:18px;border-radius:20px"></div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:6px;margin-top:4px">
+          <div class="skel" style="height:48px;border-radius:8px"></div>
+          <div class="skel" style="height:48px;border-radius:8px"></div>
+          <div class="skel" style="height:48px;border-radius:8px"></div>
+          <div class="skel" style="height:48px;border-radius:8px"></div>
+        </div>
+      </div>
+    </div>
+    <div class="card-notes">
+      <strong>Mostrar:</strong> Mientras cargan datos de Supabase · Reemplazar con datos reales cuando lleguen<br>
+      <strong>Animación:</strong> opacity 0.5 → 1 → 0.5 · 1.5s ease infinite (no usar gradiente para evitar layout shift)
+    </div>
+  </div>
+
+</div>
+
+<div style="margin-top:32px;padding:16px 20px;background:rgba(255,255,255,0.02);border-radius:10px;border:0.5px solid rgba(255,255,255,0.06);font-size:11px;color:rgba(255,255,255,0.3);text-align:center">
+  <a href="fase1-setup.html" style="color:#BA7517;text-decoration:none">← Fase 1: Setup</a>
+  &nbsp;·&nbsp;
+  <a href="INDEX.html" style="color:#BA7517;text-decoration:none">Índice</a>
+  &nbsp;·&nbsp;
+  <a href="fase3-publico.html" style="color:#BA7517;text-decoration:none">Fase 3: Públicos →</a>
+</div>
+
+</body>
+</html>

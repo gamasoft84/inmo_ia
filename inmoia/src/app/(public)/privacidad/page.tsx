@@ -67,6 +67,7 @@ export default function PrivacidadPage() {
         </Link>
         <div style={{ display: 'flex', gap: '16px' }}>
           <Link href="/terminos" style={{ fontSize: '12px', color: '#9090A8', textDecoration: 'none' }}>Términos</Link>
+          <Link href="/aviso-lfpdppp" style={{ fontSize: '12px', color: '#9090A8', textDecoration: 'none' }}>Aviso LFPDPPP</Link>
           <Link href="/login" style={{ fontSize: '12px', color: 'var(--brand)', textDecoration: 'none', fontWeight: 500 }}>Iniciar sesión</Link>
         </div>
       </nav>

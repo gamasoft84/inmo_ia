@@ -204,6 +204,7 @@ export default function LandingPage() {
           {[
             { href: '/terminos', label: 'Términos' },
             { href: '/privacidad', label: 'Privacidad' },
+            { href: '/aviso-lfpdppp', label: 'Aviso LFPDPPP' },
             { href: '/login', label: 'Iniciar sesión' },
           ].map(l => (
             <Link key={l.href} href={l.href} style={{ fontSize: '12px', color: 'rgba(255,255,255,0.35)', textDecoration: 'none' }}>{l.label}</Link>

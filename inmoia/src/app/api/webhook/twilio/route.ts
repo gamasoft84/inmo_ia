@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { handleIncomingWhatsAppMessage } from "@/lib/whatsapp/bot-handler";
 import { validateTwilioWebhookSignature } from "@/lib/whatsapp/twilio";
+import { persistWhatsAppConversation } from "@/lib/whatsapp/persistence";
 
 function getPublicWebhookUrl(req: NextRequest) {
   const protocol = req.headers.get("x-forwarded-proto") ?? "https";
@@ -16,6 +17,7 @@ export async function POST(req: NextRequest) {
 
   const from = body.From ?? "";
   const text = body.Body ?? "";
+  const to = body.To ?? "";
 
   if (!from || !text) {
     return NextResponse.json(
@@ -41,6 +43,16 @@ export async function POST(req: NextRequest) {
   const result = await handleIncomingWhatsAppMessage({
     from,
     body: text,
+  });
+
+  await persistWhatsAppConversation({
+    from,
+    to,
+    incomingMessage: text,
+    botReply: result.reply,
+    leadScore: result.leadScore,
+    leadTemp: result.leadTemp,
+    language: result.language,
   });
 
   // Twilio can consume TwiML directly from webhook response.

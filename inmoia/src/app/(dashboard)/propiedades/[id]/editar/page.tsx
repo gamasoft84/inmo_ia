@@ -404,7 +404,7 @@ export default function EditarPropiedadPage() {
                     <option key={opt.value} value={opt.value}>{opt.label}</option>
                   ))}
                 </select>
-                <p className="mt-1 text-[10px] text-text-tertiary">Solo "Activa" aparece en el catálogo público y el bot la conoce.</p>
+                <p className="mt-1 text-[10px] text-text-tertiary">Solo &quot;Activa&quot; aparece en el catálogo público y el bot la conoce.</p>
               </div>
 
               <div className="flex flex-col gap-3 rounded-[8px] border-[0.5px] border-border-tertiary bg-bg-secondary p-3">

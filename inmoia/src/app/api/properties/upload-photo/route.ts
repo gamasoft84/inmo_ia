@@ -19,6 +19,22 @@ export async function POST(req: NextRequest) {
   }
 
   const ext = file.name.split(".").pop()?.toLowerCase() ?? "jpg";
+
+  // Rechazar HEIC/HEIF (no soportado por Claude Vision ni compatible con browsers)
+  if (ext === "heic" || ext === "heif" || file.type === "image/heic" || file.type === "image/heif") {
+    return NextResponse.json(
+      { error: "Formato HEIC no soportado. En tu iPhone ve a Ajustes → Cámara → Formatos → Más compatible (JPEG)." },
+      { status: 400 }
+    );
+  }
+
+  // Limitar tamaño a 4 MB
+  if (file.size > 4 * 1024 * 1024) {
+    return NextResponse.json(
+      { error: `La foto pesa ${(file.size / 1024 / 1024).toFixed(1)} MB. El límite es 4 MB. Comprime la imagen antes de subir.` },
+      { status: 400 }
+    );
+  }
   const folder = agencyId || "general";
   const path = `${folder}/${Date.now()}-${Math.random().toString(36).slice(2, 7)}.${ext}`;
 

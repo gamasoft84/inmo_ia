@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { createClient } from "@/lib/supabase/client";
 import { PageWrapper } from "@/components/layout/PageWrapper";
 import { Button } from "@/components/ui/Button";
 import { Steps } from "@/components/ui/Steps";
@@ -13,6 +14,7 @@ const steps = [
 ];
 
 export default function NuevaPropiedadPage() {
+  const supabase = createClient();
   const [current, setCurrent] = useState("datos");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -73,11 +75,24 @@ export default function NuevaPropiedadPage() {
     setOk("");
 
     try {
+      // Obtén userId y email del cliente
+      const { data: authData } = await supabase.auth.getUser();
+      const userId = authData.user?.id;
+      const userEmail = authData.user?.email;
+
+      if (!userId || !userEmail) {
+        setError("Sesion no valida. Inicia sesion de nuevo.");
+        setLoading(false);
+        return;
+      }
+
       const response = await fetch("/api/properties/publish", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        credentials: "include", // Incluye cookies de sesión
+        credentials: "include",
         body: JSON.stringify({
+          userId,
+          userEmail,
           type: form.type,
           operation: form.operation,
           city: form.city,

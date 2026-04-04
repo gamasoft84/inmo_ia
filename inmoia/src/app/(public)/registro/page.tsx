@@ -66,6 +66,7 @@ export default function RegistroPage() {
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [ok, setOk] = useState('');
   const [form, setForm] = useState<FormData>({
     nombre: '', email: '', password: '', agencia: '', ciudad: '', tipoAgencia: '', plan: '', whatsapp: '',
   });
@@ -78,6 +79,7 @@ export default function RegistroPage() {
     if (step === 5) {
       setLoading(true);
       setError('');
+      setOk('');
 
       try {
         const { data: authData, error: signUpError } = await supabase.auth.signUp({
@@ -85,6 +87,12 @@ export default function RegistroPage() {
           password: form.password,
           options: {
             emailRedirectTo: `${window.location.origin}/api/auth/callback`,
+            data: {
+              nombre: form.nombre,
+              agencia: form.agencia,
+              ciudad: form.ciudad,
+              whatsapp: form.whatsapp,
+            },
           },
         });
 
@@ -100,28 +108,9 @@ export default function RegistroPage() {
           return;
         }
 
-        // Insertar agencia y usuario via API route (usa service_role, bypasea RLS)
-        const res = await fetch('/api/auth/register', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            userId: authData.user.id,
-            nombre: form.nombre,
-            email: form.email,
-            agencia: form.agencia,
-            ciudad: form.ciudad,
-            whatsapp: form.whatsapp,
-          }),
-        });
-
-        const json = await res.json();
-        if (!res.ok) {
-          setError(json.error ?? 'Error en el registro');
-          setLoading(false);
-          return;
-        }
-
-        window.location.href = '/dashboard';
+        // Los datos se guardan en user_metadata y se crearán en la callback cuando el usuario confirme
+        setOk('Revisa tu email para confirmar la creación de cuenta. Después serás redirigido al dashboard.');
+        setLoading(false);
       } catch (cause) {
         const message = cause instanceof Error ? cause.message : 'Error inesperado';
         setError(message);
@@ -208,6 +197,22 @@ export default function RegistroPage() {
               }}
             >
               {error}
+            </div>
+          )}
+
+          {ok && (
+            <div
+              style={{
+                marginBottom: '12px',
+                border: '0.5px solid #C1E7C1',
+                background: '#EBFCEB',
+                color: '#2D7D2D',
+                borderRadius: '8px',
+                padding: '8px 10px',
+                fontSize: '11px',
+              }}
+            >
+              {ok}
             </div>
           )}
 

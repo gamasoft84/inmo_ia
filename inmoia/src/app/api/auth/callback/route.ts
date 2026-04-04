@@ -83,9 +83,7 @@ async function setRoleCookies(
           role: 'agency_admin',
         });
 
-      if (!userError) {
-        console.log('[callback] User and agency created successfully on confirmation');
-      } else {
+      if (userError) {
         console.error('[callback] Error creating user:', userError.message);
       }
     } else {

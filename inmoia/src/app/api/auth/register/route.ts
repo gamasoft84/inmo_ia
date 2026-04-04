@@ -6,10 +6,7 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const { userId, nombre, email, agencia, whatsapp } = body;
 
-    console.log("[register] POST called with:", { userId, nombre, email, agencia });
-
     if (!userId || !nombre || !email || !agencia) {
-      console.log("[register] Missing required fields");
       return NextResponse.json({ error: 'Faltan campos requeridos' }, { status: 400 });
     }
 
@@ -48,8 +45,6 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    console.log("[register] Agency created:", agencyData.id);
-
     // 2. Crear usuario vinculado a la agencia
     const { error: userError } = await supabase.from('users').insert({
       id: userId,
@@ -69,7 +64,6 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    console.log("[register] User created successfully:", userId);
     return NextResponse.json({ agencyId: agencyData.id });
   } catch (err) {
     const message = err instanceof Error ? err.message : 'Error inesperado';

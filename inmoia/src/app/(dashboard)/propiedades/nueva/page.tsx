@@ -57,15 +57,30 @@ export default function NuevaPropiedadPage() {
     const area = form.area_total || "amplia";
     const beds = form.bedrooms || "2";
 
-    // Endpoint actual es stub; lo llamamos para dejar wiring listo y fallback local.
-    await fetch("/api/ai/describe", { method: "POST" }).catch(() => null);
+    const ai = await fetch("/api/ai/describe", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        type: form.type,
+        operation: form.operation,
+        city: form.city,
+        area_total: form.area_total,
+        bedrooms: form.bedrooms,
+        photos: form.photos,
+      }),
+    })
+      .then(async (res) => {
+        if (!res.ok) return null;
+        return (await res.json()) as { title_es?: string; desc_es?: string; source?: string };
+      })
+      .catch(() => null);
 
-    const title = `${form.type.toUpperCase()} en ${city}`;
-    const desc = `Propiedad en ${city} con ${area}m2 y ${beds} recamaras. Ideal para ${
+    const title = ai?.title_es || `${form.type.toUpperCase()} en ${city}`;
+    const desc = ai?.desc_es || `Propiedad en ${city} con ${area}m2 y ${beds} recamaras. Ideal para ${
       form.operation === "rent" ? "renta" : "venta"
     }. Contactanos para conocer disponibilidad y agendar visita.`;
     setForm((prev) => ({ ...prev, title_es: title, desc_es: desc }));
-    setOk("Descripcion generada con IA.");
+    setOk(ai?.source === "anthropic" ? "Descripcion generada con Claude." : "Descripcion generada con fallback local.");
     setError("");
   }
 

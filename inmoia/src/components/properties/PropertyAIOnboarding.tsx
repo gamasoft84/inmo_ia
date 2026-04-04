@@ -55,7 +55,11 @@ export function PropertyAIOnboarding({ agencyId, onComplete }: Props) {
       const data = await res?.json().catch(() => null) as { url?: string; error?: string } | null;
 
       if (!res?.ok) {
-        const msg = data?.error ?? `Error subiendo ${file.name}`;
+        const status = res?.status ?? 0;
+        const msg = data?.error
+          ?? (status === 413 ? `La foto ${file.name} es muy pesada. Comprime antes de subir.`
+          : status === 0    ? `Sin conexión al subir ${file.name}.`
+          : `Error ${status} subiendo ${file.name}. Intenta con otra imagen.`);
         setError(msg);
         setState("error");
         return;

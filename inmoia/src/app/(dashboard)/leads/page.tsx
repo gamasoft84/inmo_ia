@@ -1,19 +1,24 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { createClient } from "@/lib/supabase/client";
 import { PageWrapper } from "@/components/layout/PageWrapper";
 import { Chip } from "@/components/ui/Chip";
 
 type Temp = "hot" | "warm" | "cold";
 
-const leadData = [
-  { id: "carlos-mendoza", initials: "CM", name: "Carlos Mendoza", property: "Casa Coyoacan", time: "hace 5 min", temp: "hot" as Temp, score: 87 },
-  { id: "ana-torres", initials: "AT", name: "Ana Torres", property: "Depto Santa Fe", time: "hace 2h", temp: "warm" as Temp, score: 63 },
-  { id: "roberto-silva", initials: "RS", name: "Roberto Silva", property: "Terreno Huatulco", time: "ayer", temp: "cold" as Temp, score: 28 },
-  { id: "maria-lopez", initials: "ML", name: "Maria Lopez", property: "Casa Pedregal", time: "hace 45 min", temp: "hot" as Temp, score: 81 },
-  { id: "jorge-ruiz", initials: "JR", name: "Jorge Ruiz", property: "Depto Roma", time: "hace 3h", temp: "warm" as Temp, score: 51 },
-];
+type LeadListItem = {
+  id: string;
+  initials: string;
+  name: string;
+  property: string;
+  time: string;
+  temp: Temp;
+  score: number;
+};
+
+type Row = Record<string, unknown>;
 
 const tempLabel: Record<Temp, string> = {
   hot: "caliente",
@@ -28,8 +33,50 @@ const tempClass: Record<Temp, string> = {
 };
 
 export default function LeadsPage() {
+  const supabase = createClient();
   const [query, setQuery] = useState("");
-  const [active, setActive] = useState<Temp | "all">("hot");
+  const [active, setActive] = useState<Temp | "all">("all");
+  const [leadData, setLeadData] = useState<LeadListItem[]>([]);
+
+  useEffect(() => {
+    let mounted = true;
+
+    async function load() {
+      const { data } = await supabase
+        .from("leads")
+        .select("*")
+        .order("created_at", { ascending: false })
+        .limit(80);
+
+      if (!mounted) return;
+
+      const mapped: LeadListItem[] = (data ?? []).map((raw) => {
+        const lead = raw as Row;
+        const name = (lead.name as string | null) ?? "Lead sin nombre";
+        const pieces = name.split(" ").filter(Boolean);
+        const initials = pieces.slice(0, 2).map((p) => p[0]?.toUpperCase() ?? "").join("") || "--";
+        const created = lead.created_at ? new Date(String(lead.created_at)).toLocaleDateString("es-MX") : "reciente";
+        const tempRaw = ((lead.temperature as string | null) ?? "cold").toLowerCase();
+        const temp = ["hot", "warm", "cold"].includes(tempRaw) ? (tempRaw as Temp) : "cold";
+        return {
+          id: String(lead.id ?? ""),
+          initials,
+          name,
+          property: (lead.preferred_type as string | null) ?? "Sin preferencia",
+          time: created,
+          temp,
+          score: Number((lead.ai_score as number | null) ?? 0),
+        };
+      });
+
+      setLeadData(mapped);
+    }
+
+    void load();
+    return () => {
+      mounted = false;
+    };
+  }, [supabase]);
 
   const filtered = useMemo(() => {
     return leadData.filter((lead) => {
@@ -40,7 +87,7 @@ export default function LeadsPage() {
         lead.property.toLowerCase().includes(q);
       return byTemp && byText;
     });
-  }, [active, query]);
+  }, [active, leadData, query]);
 
   return (
     <PageWrapper title="Leads">

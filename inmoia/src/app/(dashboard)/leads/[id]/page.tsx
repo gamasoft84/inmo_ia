@@ -1,10 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useParams } from "next/navigation";
+import { createClient } from "@/lib/supabase/client";
 import { PageWrapper } from "@/components/layout/PageWrapper";
 import { Button } from "@/components/ui/Button";
 
 type LeadTab = "resumen" | "conversacion" | "props" | "tareas" | "notas";
+type Row = Record<string, unknown>;
 
 const tabs: { id: LeadTab; label: string }[] = [
   { id: "resumen", label: "Resumen" },
@@ -15,7 +18,43 @@ const tabs: { id: LeadTab; label: string }[] = [
 ];
 
 export default function LeadDetailPage() {
+  const supabase = createClient();
+  const params = useParams<{ id: string }>();
+  const leadId = params?.id;
+
   const [activeTab, setActiveTab] = useState<LeadTab>("resumen");
+  const [lead, setLead] = useState<Row | null>(null);
+  const [conversation, setConversation] = useState<Row[]>([]);
+
+  useEffect(() => {
+    let mounted = true;
+
+    async function load() {
+      if (!leadId) return;
+
+      const [{ data: leadData }, { data: conversationData }] = await Promise.all([
+        supabase.from("leads").select("*").eq("id", leadId).maybeSingle(),
+        supabase.from("conversations").select("*").eq("lead_id", leadId).order("created_at", { ascending: true }).limit(40),
+      ]);
+
+      if (!mounted) return;
+      setLead(leadData ?? null);
+      setConversation(conversationData ?? []);
+    }
+
+    void load();
+    return () => {
+      mounted = false;
+    };
+  }, [leadId, supabase]);
+
+  const leadName = (lead?.name as string | undefined) ?? "Lead";
+  const leadPhone = (lead?.phone as string | undefined) ?? "Sin telefono";
+  const leadCity = (lead?.city as string | undefined) ?? "Sin ciudad";
+  const leadScore = Number(lead?.ai_score ?? 0);
+  const preferredZones = Array.isArray(lead?.preferred_zones)
+    ? (lead?.preferred_zones as string[]).join(", ")
+    : leadCity;
 
   return (
     <PageWrapper
@@ -31,13 +70,20 @@ export default function LeadDetailPage() {
     >
       <section className="rounded-[12px] border-[0.5px] border-border-tertiary bg-bg-primary">
         <div className="flex items-center gap-3 border-b-[0.5px] border-border-tertiary bg-bg-secondary px-4 py-3">
-          <div className="avatar avatar-md">CM</div>
+          <div className="avatar avatar-md">
+            {leadName
+              .split(" ")
+              .filter(Boolean)
+              .slice(0, 2)
+              .map((p: string) => p[0]?.toUpperCase() ?? "")
+              .join("") || "--"}
+          </div>
           <div>
-            <p className="text-[14px] font-medium text-text-primary">Carlos Mendoza</p>
-            <p className="text-[10px] text-text-tertiary">📱 55 1234 5678 · CDMX</p>
+            <p className="text-[14px] font-medium text-text-primary">{leadName}</p>
+            <p className="text-[10px] text-text-tertiary">📱 {leadPhone} · {leadCity}</p>
           </div>
           <div className="ml-auto flex h-10 w-10 items-center justify-center rounded-full border-[1.5px] border-error-border bg-error-light text-[12px] font-semibold text-error">
-            87
+            {leadScore}
           </div>
         </div>
 
@@ -63,36 +109,41 @@ export default function LeadDetailPage() {
             <div className="space-y-2">
               <div className="flex items-center justify-between border-b-[0.5px] border-border-tertiary pb-2 text-[11px]">
                 <span className="text-text-tertiary">Presupuesto</span>
-                <span className="font-medium text-brand-dark">Hasta $6,000,000</span>
+                <span className="font-medium text-brand-dark">
+                  {lead?.budget_max ? `Hasta $${Number(lead.budget_max).toLocaleString("es-MX")}` : "Sin dato"}
+                </span>
               </div>
               <div className="flex items-center justify-between border-b-[0.5px] border-border-tertiary pb-2 text-[11px]">
                 <span className="text-text-tertiary">Zona preferida</span>
-                <span className="font-medium text-text-primary">Coyoacan, Sur CDMX</span>
+                <span className="font-medium text-text-primary">{preferredZones}</span>
               </div>
               <div className="flex items-center justify-between border-b-[0.5px] border-border-tertiary pb-2 text-[11px]">
                 <span className="text-text-tertiary">Urgencia</span>
-                <span className="font-medium text-error">Alta · este mes</span>
+                <span className="font-medium text-error">{(lead?.urgency as string | undefined) ?? "Sin dato"}</span>
               </div>
               <div className="flex items-center justify-between text-[11px]">
                 <span className="text-text-tertiary">Match con catalogo</span>
-                <span className="font-medium text-success">Casa Coyoacan ✓</span>
+                <span className="font-medium text-success">{(lead?.preferred_type as string | undefined) ?? "Sin dato"}</span>
               </div>
             </div>
           )}
 
           {activeTab === "conversacion" && (
             <div className="space-y-2 text-[11px] text-text-secondary">
-              <p>10:33 Cliente: Me interesa la casa de Coyoacan.</p>
-              <p>10:34 Sofia: Te puedo agendar visita manana 10am o jueves 3pm.</p>
-              <p>10:35 Cliente: Manana 10am me funciona.</p>
+              {conversation.map((msg) => (
+                <p key={String(msg.id ?? Math.random())}>
+                  {String(msg.role ?? "client")}: {String(msg.content ?? "")}
+                </p>
+              ))}
+              {conversation.length === 0 ? <p>Sin mensajes aun.</p> : null}
             </div>
           )}
 
           {activeTab === "props" && (
             <div className="space-y-2 text-[11px] text-text-secondary">
-              <p>🏡 Casa Coyoacan · $5,800,000</p>
-              <p>🏠 Casa Pedregal · $6,200,000</p>
-              <p>🏢 Depto Del Valle · $4,900,000</p>
+              <p>Preferencia: {(lead?.preferred_type as string | undefined) ?? "Sin dato"}</p>
+              <p>Ciudad: {leadCity}</p>
+              <p>Estatus: {(lead?.status as string | undefined) ?? "new"}</p>
             </div>
           )}
 
@@ -106,8 +157,7 @@ export default function LeadDetailPage() {
 
           {activeTab === "notas" && (
             <div className="space-y-2 text-[11px] text-text-secondary">
-              <p>Prefiere zona sur por cercania a su trabajo.</p>
-              <p>Busca jardin amplio para su mascota.</p>
+              <p>{(lead?.notes as string | undefined) ?? "Sin notas registradas."}</p>
             </div>
           )}
         </div>

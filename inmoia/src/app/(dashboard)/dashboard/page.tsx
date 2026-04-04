@@ -1,34 +1,119 @@
+"use client";
+
 import Link from "next/link";
+import { useEffect, useMemo, useState } from "react";
+import { createClient } from "@/lib/supabase/client";
 import { PageWrapper } from "@/components/layout/PageWrapper";
 import { Button } from "@/components/ui/Button";
 import { ProgressBar } from "@/components/ui/ProgressBar";
 
-const stats = [
-  { label: "LEADS HOY", value: "23" },
-  { label: "BOT AUTO", value: "83%" },
-  { label: "VISITAS", value: "6" },
-  { label: "PROPS", value: "31" },
-];
+type Temp = "hot" | "warm" | "cold";
 
-const leads = [
-  { id: "carlos-mendoza", initials: "CM", name: "Carlos Mendoza", meta: "Casa Coyoacan · hace 5 min", temp: "hot" },
-  { id: "ana-torres", initials: "AT", name: "Ana Torres", meta: "Depto Santa Fe · hace 2h", temp: "warm" },
-  { id: "roberto-silva", initials: "RS", name: "Roberto Silva", meta: "Terreno Huatulco · ayer", temp: "cold" },
-];
+type LeadItem = {
+  id: string;
+  initials: string;
+  name: string;
+  meta: string;
+  temp: Temp;
+};
 
-const tempStyles = {
+type Row = Record<string, unknown>;
+
+const tempStyles: Record<Temp, string> = {
   hot: "bg-error-light text-error",
   warm: "bg-brand-light text-brand-dark",
   cold: "bg-bg-secondary text-text-tertiary",
 };
 
-const tempLabel = {
+const tempLabel: Record<Temp, string> = {
   hot: "caliente",
   warm: "tibio",
   cold: "frio",
 };
 
+function initialsFromName(name: string) {
+  return name
+    .split(" ")
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((part) => part[0]?.toUpperCase() ?? "")
+    .join("") || "--";
+}
+
+function fromNowLabel(value?: string | null) {
+  if (!value) return "reciente";
+  const now = Date.now();
+  const when = new Date(value).getTime();
+  const diffMin = Math.max(0, Math.floor((now - when) / 60000));
+  if (diffMin < 60) return `hace ${diffMin || 1} min`;
+  const diffHours = Math.floor(diffMin / 60);
+  if (diffHours < 24) return `hace ${diffHours}h`;
+  const diffDays = Math.floor(diffHours / 24);
+  return diffDays === 1 ? "ayer" : `hace ${diffDays} dias`;
+}
+
 export default function DashboardPage() {
+  const supabase = createClient();
+  const [stats, setStats] = useState([
+    { label: "LEADS HOY", value: "0" },
+    { label: "BOT AUTO", value: "0%" },
+    { label: "VISITAS", value: "0" },
+    { label: "PROPS", value: "0" },
+  ]);
+  const [leads, setLeads] = useState<LeadItem[]>([]);
+
+  useEffect(() => {
+    let mounted = true;
+
+    async function load() {
+      const todayIso = new Date(new Date().setHours(0, 0, 0, 0)).toISOString();
+
+      const [leadsTodayRes, visitsRes, propertiesRes, convTotalRes, convBotRes, recentRes] = await Promise.all([
+        supabase.from("leads").select("*", { count: "exact", head: true }).gte("created_at", todayIso),
+        supabase.from("visits").select("*", { count: "exact", head: true }),
+        supabase.from("properties").select("*", { count: "exact", head: true }),
+        supabase.from("conversations").select("*", { count: "exact", head: true }),
+        supabase.from("conversations").select("*", { count: "exact", head: true }).eq("role", "bot"),
+        supabase.from("leads").select("*").order("created_at", { ascending: false }).limit(5),
+      ]);
+
+      const totalConversations = convTotalRes.count ?? 0;
+      const botConversations = convBotRes.count ?? 0;
+      const botAuto = totalConversations > 0 ? Math.round((botConversations / totalConversations) * 100) : 0;
+
+      const leadItems: LeadItem[] = (recentRes.data ?? []).map((raw) => {
+        const lead = raw as Row;
+        const name = (lead.name as string | null) ?? "Lead sin nombre";
+        const temp = ((lead.temperature as string | null) ?? "cold").toLowerCase() as Temp;
+        const tempSafe: Temp = ["hot", "warm", "cold"].includes(temp) ? temp : "cold";
+        return {
+          id: String(lead.id ?? ""),
+          initials: initialsFromName(name),
+          name,
+          meta: `${String(lead.city ?? "Sin ciudad")} · ${fromNowLabel((lead.created_at as string | null) ?? null)}`,
+          temp: tempSafe,
+        };
+      });
+
+      if (!mounted) return;
+
+      setStats([
+        { label: "LEADS HOY", value: String(leadsTodayRes.count ?? 0) },
+        { label: "BOT AUTO", value: `${botAuto}%` },
+        { label: "VISITAS", value: String(visitsRes.count ?? 0) },
+        { label: "PROPS", value: String(propertiesRes.count ?? 0) },
+      ]);
+      setLeads(leadItems);
+    }
+
+    void load();
+    return () => {
+      mounted = false;
+    };
+  }, [supabase]);
+
+  const hottestLead = useMemo(() => leads.find((lead) => lead.temp === "hot"), [leads]);
+
   return (
     <PageWrapper
       title="Dashboard"
@@ -52,9 +137,11 @@ export default function DashboardPage() {
         ))}
       </div>
 
-      <div className="mt-3 rounded-[12px] border-[0.5px] border-brand-border bg-brand-light px-3 py-2 text-[11px] text-brand-text">
-        🔥 Carlos Mendoza es lead caliente · Score 87/100
-      </div>
+      {hottestLead ? (
+        <div className="mt-3 rounded-[12px] border-[0.5px] border-brand-border bg-brand-light px-3 py-2 text-[11px] text-brand-text">
+          🔥 {hottestLead.name} es lead caliente
+        </div>
+      ) : null}
 
       <div className="mt-3 grid gap-3 xl:grid-cols-[1.35fr_1fr]">
         <section className="rounded-[12px] border-[0.5px] border-border-tertiary bg-bg-primary">
@@ -78,10 +165,13 @@ export default function DashboardPage() {
                   <p className="text-[10px] text-text-tertiary">{lead.meta}</p>
                 </div>
                 <span className={`pill ${tempStyles[lead.temp as keyof typeof tempStyles]}`}>
-                  {tempLabel[lead.temp as keyof typeof tempLabel]}
+                  {tempLabel[lead.temp]}
                 </span>
               </Link>
             ))}
+            {leads.length === 0 ? (
+              <div className="px-4 py-5 text-[11px] text-text-tertiary">No hay leads recientes.</div>
+            ) : null}
           </div>
         </section>
 

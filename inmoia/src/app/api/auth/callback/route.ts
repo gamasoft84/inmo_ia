@@ -15,6 +15,40 @@ function sanitizeNextPath(nextPath: string | null): string {
   return nextPath.startsWith('/') ? nextPath : '/dashboard';
 }
 
+async function setRoleCookies(
+  supabase: ReturnType<typeof createServerClient>,
+  response: NextResponse,
+) {
+  const { data: userData } = await supabase.auth.getUser();
+  const user = userData.user;
+
+  if (!user) return;
+
+  response.cookies.set('inmoia_email', user.email ?? '', {
+    path: '/',
+    sameSite: 'lax',
+    secure: process.env.NODE_ENV === 'production',
+    httpOnly: false,
+    maxAge: 60 * 60 * 24 * 7,
+  });
+
+  const { data: profile } = await supabase
+    .from('users')
+    .select('role')
+    .eq('id', user.id)
+    .maybeSingle();
+
+  if (profile?.role) {
+    response.cookies.set('inmoia_role', profile.role, {
+      path: '/',
+      sameSite: 'lax',
+      secure: process.env.NODE_ENV === 'production',
+      httpOnly: false,
+      maxAge: 60 * 60 * 24 * 7,
+    });
+  }
+}
+
 export async function GET(request: NextRequest) {
   const url = new URL(request.url);
   const code = url.searchParams.get('code');
@@ -46,6 +80,7 @@ export async function GET(request: NextRequest) {
     if (error) {
       return NextResponse.redirect(new URL(`/login?error=${encodeURIComponent(error.message)}`, request.url));
     }
+    await setRoleCookies(supabase, response);
     return response;
   }
 
@@ -57,6 +92,7 @@ export async function GET(request: NextRequest) {
     if (error) {
       return NextResponse.redirect(new URL(`/login?error=${encodeURIComponent(error.message)}`, request.url));
     }
+    await setRoleCookies(supabase, response);
     return response;
   }
 

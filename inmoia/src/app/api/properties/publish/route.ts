@@ -42,11 +42,12 @@ export async function POST(req: NextRequest) {
 
   try {
     const body = await req.json();
-    const { userId, userEmail, type, operation, city, price_mxn, area_total, bedrooms, photos: photosRaw, title_es, desc_es, publish } = body;
+    const { userId, userEmail, type, operation, city, price_mxn, area_total, bedrooms, photos: photosRaw, amenities: amenitiesRaw, title_es, desc_es, publish } = body;
     // Normaliza fotos: acepta string (URLs separadas por \n) o array
     const photos = Array.isArray(photosRaw)
       ? photosRaw.filter(Boolean)
       : String(photosRaw ?? "").split("\n").map((s: string) => s.trim()).filter(Boolean);
+    const amenities = Array.isArray(amenitiesRaw) ? amenitiesRaw.filter(Boolean) : [];
 
     // Validación básica
     if (!userId || !userEmail) {
@@ -174,6 +175,7 @@ export async function POST(req: NextRequest) {
         area_total: areaNum,
         bedrooms: Number(bedrooms || 0),
         photos,
+        amenities,
         slug: tempSlug,
       })
       .select("id")
@@ -216,6 +218,7 @@ export async function POST(req: NextRequest) {
         city,
         status: publish ? "active" : "draft",
         photos,
+        amenities,
       })
       .select("id")
       .single();

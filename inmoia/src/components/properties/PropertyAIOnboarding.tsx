@@ -52,15 +52,21 @@ export function PropertyAIOnboarding({ agencyId, onComplete }: Props) {
         body: fd,
       }).catch(() => null);
 
-      if (!res?.ok) continue;
+      const data = await res?.json().catch(() => null) as { url?: string; error?: string } | null;
 
-      const data = await res.json().catch(() => null) as { url?: string } | null;
+      if (!res?.ok) {
+        const msg = data?.error ?? `Error subiendo ${file.name}`;
+        setError(msg);
+        setState("error");
+        return;
+      }
+
       if (data?.url) uploaded.push(data.url);
       setProgress(10 + Math.round(((i + 1) / total) * 50));
     }
 
     if (uploaded.length === 0) {
-      setError("No se pudieron subir las fotos. Revisa la consola del servidor para más detalles.");
+      setError("No se pudo subir ninguna foto. Verifica el formato y tamaño (máx 4 MB, JPEG/PNG/WEBP).");
       setState("error");
       return;
     }

@@ -28,10 +28,10 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  // Limitar tamaño a 4 MB
-  if (file.size > 4 * 1024 * 1024) {
+  // Limitar tamaño a 4.5 MB (límite de Vercel Serverless)
+  if (file.size > 4.5 * 1024 * 1024) {
     return NextResponse.json(
-      { error: `La foto pesa ${(file.size / 1024 / 1024).toFixed(1)} MB. El límite es 4 MB. Comprime la imagen antes de subir.` },
+      { error: `La foto pesa ${(file.size / 1024 / 1024).toFixed(1)} MB. El límite es 4.5 MB. Comprime la imagen antes de subir.` },
       { status: 400 }
     );
   }

@@ -14,7 +14,9 @@ export type AnalyzePhotosResult = {
   estimated_price_min: number | null;
   estimated_price_max: number | null;
   title_es: string;
+  title_en: string;
   desc_es: string;
+  desc_en: string;
   desc_whatsapp_es: string;
   desc_instagram_es: string;
   ai_score: number;
@@ -39,7 +41,9 @@ function localFallback(): AnalyzePhotosResult {
     estimated_price_min: null,
     estimated_price_max: null,
     title_es: "Propiedad residencial",
+    title_en: "Residential property",
     desc_es: "Hermosa propiedad en excelentes condiciones. Espacios amplios y bien iluminados. Ideal para familia.",
+    desc_en: "Beautiful property in excellent condition. Spacious, well-lit spaces. Ideal for families.",
     desc_whatsapp_es: "🏡 Propiedad en venta. Excelentes condiciones. Escríbenos para más info.",
     desc_instagram_es: "🏡✨ Nueva propiedad disponible. Espacios únicos para tu familia. DM para informes.",
     ai_score: 50,
@@ -88,7 +92,7 @@ export async function POST(req: NextRequest) {
 
     const result = await client.messages.create({
       model: MODEL,
-      max_tokens: 900,
+      max_tokens: 1200,
       system: `Eres un experto en bienes raíces mexicanos con visión artificial.
 Analiza las fotos de esta propiedad y extrae información precisa.
 Responde ÚNICAMENTE con JSON válido, sin markdown, sin explicaciones.`,
@@ -112,10 +116,12 @@ Responde SOLO con este JSON (sin markdown):
   "condition": "descripción breve del estado",
   "estimated_price_min": número en MXN o null,
   "estimated_price_max": número en MXN o null,
-  "title_es": "título comercial máx 70 chars",
-  "desc_es": "descripción portal 300-500 chars profesional",
-  "desc_whatsapp_es": "versión corta con emojis para WA máx 200 chars",
-  "desc_instagram_es": "caption Instagram con emojis máx 150 chars",
+  "title_es": "título comercial en español máx 70 chars",
+  "title_en": "commercial title in English max 70 chars",
+  "desc_es": "descripción portal en español 300-500 chars profesional",
+  "desc_en": "portal description in English 300-500 chars professional",
+  "desc_whatsapp_es": "versión corta con emojis para WA en español máx 200 chars",
+  "desc_instagram_es": "caption Instagram con emojis en español máx 150 chars",
   "ai_score": número 0-100 (atractivo comercial),
   "confidence": número 0-1 (confianza del análisis)
 }`,

@@ -42,7 +42,7 @@ export async function POST(req: NextRequest) {
 
   try {
     const body = await req.json();
-    const { userId, userEmail, type, operation, city, price_mxn, area_total, bedrooms, photos: photosRaw, amenities: amenitiesRaw, title_es, desc_es, publish } = body;
+    const { userId, userEmail, type, operation, city, price_mxn, area_total, bedrooms, photos: photosRaw, amenities: amenitiesRaw, title_es, title_en, desc_es, desc_en, desc_whatsapp_es, desc_instagram_es, publish } = body;
     // Normaliza fotos: acepta string (URLs separadas por \n) o array
     const photos = Array.isArray(photosRaw)
       ? photosRaw.filter(Boolean)
@@ -170,7 +170,11 @@ export async function POST(req: NextRequest) {
         city,
         status: publish ? "active" : "draft",
         title_es,
+        title_en:          title_en || null,
         desc_es,
+        desc_en:           desc_en || null,
+        desc_whatsapp_es:  desc_whatsapp_es || null,
+        desc_instagram_es: desc_instagram_es || null,
         price_mxn: Number(price_mxn || 0),
         area_total: areaNum,
         bedrooms: Number(bedrooms || 0),

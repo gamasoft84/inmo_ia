@@ -12,9 +12,16 @@ const sora = Sora({
 });
 
 export const metadata: Metadata = {
-  title: "InmoIA",
-  description: "SaaS inmobiliario con IA para Mexico",
+  title: "InmoIA — Agencia con IA",
+  description: "Tu agencia vende más mientras la IA trabaja por ti",
   manifest: "/manifest.json",
+  icons: {
+    icon:  [
+      { url: "/icons/icon-32.png",  sizes: "32x32",   type: "image/png" },
+      { url: "/icons/icon-192.png", sizes: "192x192", type: "image/png" },
+    ],
+    apple: { url: "/icons/icon-180.png", sizes: "180x180", type: "image/png" },
+  },
 };
 
 export default function RootLayout({

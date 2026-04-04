@@ -1,13 +1,23 @@
 {
-  "name": "InmoIA",
+  "name": "InmoIA — Agencia con IA",
   "short_name": "InmoIA",
-  "description": "Tu agencia vende mas mientras la IA trabaja por ti",
+  "description": "Tu agencia vende más mientras la IA trabaja por ti",
   "start_url": "/dashboard",
   "display": "standalone",
   "orientation": "portrait",
   "background_color": "#0F0F1A",
-  "theme_color": "#BA7517",
+  "theme_color": "#C8830A",
   "icons": [
+    {
+      "src": "/icons/icon-32.png",
+      "sizes": "32x32",
+      "type": "image/png"
+    },
+    {
+      "src": "/icons/icon-180.png",
+      "sizes": "180x180",
+      "type": "image/png"
+    },
     {
       "src": "/icons/icon-192.png",
       "sizes": "192x192",

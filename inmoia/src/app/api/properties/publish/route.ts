@@ -23,6 +23,11 @@ function isSlugConflict(message?: string | null) {
   return normalized.includes("duplicate key") && normalized.includes("slug");
 }
 
+function isMissingSlugColumn(message?: string | null) {
+  const normalized = (message || "").toLowerCase();
+  return normalized.includes("column") && normalized.includes("slug") && normalized.includes("does not exist");
+}
+
 export async function POST(req: NextRequest) {
   // Cliente service role para bypass RLS en tabla users
   const supabaseAdmin = createServiceClient();
@@ -203,7 +208,8 @@ export async function POST(req: NextRequest) {
       {
         success: true,
         id: fallback.data.id,
-        slug: slugBase,
+        // Si no existe columna slug en schema legado, forzamos ruta publica por id.
+        slug: isMissingSlugColumn(withSlug.error?.message) ? null : slugBase,
       },
       { status: 201 }
     );

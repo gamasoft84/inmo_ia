@@ -8,6 +8,27 @@ import { Button } from "@/components/ui/Button";
 
 type Row = Record<string, unknown>;
 
+function isUuid(value: string) {
+  return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value);
+}
+
+function parseLegacySlug(slug: string) {
+  const parts = slug.split("-").filter(Boolean);
+  if (parts.length < 3) return null;
+
+  const maybeTimestamp = Number(parts[parts.length - 1]);
+  if (!Number.isFinite(maybeTimestamp)) return null;
+
+  const type = parts[0] || null;
+  const city = parts.slice(1, -1).join(" ") || null;
+  return { type, city };
+}
+
+function isMissingSlugColumn(message?: string | null) {
+  const normalized = (message || "").toLowerCase();
+  return normalized.includes("column") && normalized.includes("slug") && normalized.includes("does not exist");
+}
+
 export default function PublicPropertyPage() {
   const supabase = createClient();
   const params = useParams<{ slug: string }>();
@@ -24,13 +45,38 @@ export default function PublicPropertyPage() {
 
       let propertyData: Row | null = null;
 
-      const bySlug = await supabase.from("properties").select("*").eq("slug", slug).maybeSingle();
-      if (!bySlug.error && bySlug.data) {
-        propertyData = bySlug.data;
-      } else {
+      if (isUuid(slug)) {
         const byId = await supabase.from("properties").select("*").eq("id", slug).maybeSingle();
         if (!byId.error && byId.data) {
           propertyData = byId.data;
+        }
+      } else {
+        const parsed = parseLegacySlug(slug);
+
+        // Si viene formato legacy tipo casa-oaxaca-1775..., evita consultar columna slug.
+        if (parsed?.city) {
+          const legacy = await supabase
+            .from("properties")
+            .select("*")
+            .ilike("city", parsed.city)
+            .order("created_at", { ascending: false })
+            .limit(1)
+            .maybeSingle();
+
+          if (!legacy.error && legacy.data) {
+            propertyData = legacy.data;
+          }
+        }
+
+        if (!propertyData) {
+          const bySlug = await supabase.from("properties").select("*").eq("slug", slug).maybeSingle();
+
+          if (!bySlug.error && bySlug.data) {
+            propertyData = bySlug.data;
+          } else if (isMissingSlugColumn(bySlug.error?.message)) {
+            // En schema legacy sin slug simplemente dejamos propertyData en null.
+            propertyData = null;
+          }
         }
       }
 

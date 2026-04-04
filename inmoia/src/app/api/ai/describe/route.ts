@@ -12,6 +12,11 @@ type DescribePayload = {
   photos?: string;
 };
 
+type DescribeResult = {
+  title_es?: string;
+  desc_es?: string;
+};
+
 function localFallback(payload: DescribePayload) {
   const city = payload.city?.trim() || "tu ciudad";
   const area = String(payload.area_total || "amplia");
@@ -25,13 +30,35 @@ function localFallback(payload: DescribePayload) {
   };
 }
 
+function parseDescribeResult(raw: string): DescribeResult | null {
+  const trimmed = raw.trim();
+
+  try {
+    return JSON.parse(trimmed) as DescribeResult;
+  } catch {
+    // Intento 2: extraer primer bloque JSON de texto libre o markdown.
+    const start = trimmed.indexOf("{");
+    const end = trimmed.lastIndexOf("}");
+    if (start === -1 || end === -1 || end <= start) {
+      return null;
+    }
+
+    const jsonCandidate = trimmed.slice(start, end + 1);
+    try {
+      return JSON.parse(jsonCandidate) as DescribeResult;
+    } catch {
+      return null;
+    }
+  }
+}
+
 export async function POST(req: NextRequest) {
   const payload = (await req.json().catch(() => ({}))) as DescribePayload;
   const fallback = localFallback(payload);
 
   const apiKey = process.env.ANTHROPIC_API_KEY;
   if (!apiKey) {
-    return NextResponse.json({ ok: true, source: "fallback", ...fallback });
+    return NextResponse.json({ ok: true, source: "fallback", fallback_reason: "missing_api_key", ...fallback });
   }
 
   try {
@@ -66,7 +93,11 @@ export async function POST(req: NextRequest) {
       .join("\n")
       .trim();
 
-    const parsed = JSON.parse(text) as { title_es?: string; desc_es?: string };
+    const parsed = parseDescribeResult(text);
+    if (!parsed) {
+      return NextResponse.json({ ok: true, source: "fallback", fallback_reason: "invalid_model_json", ...fallback });
+    }
+
     const title_es = (parsed.title_es || fallback.title_es).trim();
     const desc_es = (parsed.desc_es || fallback.desc_es).trim();
 
@@ -77,6 +108,6 @@ export async function POST(req: NextRequest) {
       desc_es,
     });
   } catch {
-    return NextResponse.json({ ok: true, source: "fallback", ...fallback });
+    return NextResponse.json({ ok: true, source: "fallback", fallback_reason: "anthropic_error", ...fallback });
   }
 }

@@ -71,7 +71,7 @@ export default function NuevaPropiedadPage() {
     })
       .then(async (res) => {
         if (!res.ok) return null;
-        return (await res.json()) as { title_es?: string; desc_es?: string; source?: string };
+        return (await res.json()) as { title_es?: string; desc_es?: string; source?: string; fallback_reason?: string };
       })
       .catch(() => null);
 
@@ -80,7 +80,15 @@ export default function NuevaPropiedadPage() {
       form.operation === "rent" ? "renta" : "venta"
     }. Contactanos para conocer disponibilidad y agendar visita.`;
     setForm((prev) => ({ ...prev, title_es: title, desc_es: desc }));
-    setOk(ai?.source === "anthropic" ? "Descripcion generada con Claude." : "Descripcion generada con fallback local.");
+    if (ai?.source === "anthropic") {
+      setOk("Descripcion generada con Claude.");
+    } else if (ai?.fallback_reason === "missing_api_key") {
+      setOk("Descripcion generada con fallback local (falta ANTHROPIC_API_KEY).");
+    } else if (ai?.fallback_reason === "invalid_model_json") {
+      setOk("Descripcion generada con fallback local (respuesta no valida de Claude).");
+    } else {
+      setOk("Descripcion generada con fallback local.");
+    }
     setError("");
   }
 

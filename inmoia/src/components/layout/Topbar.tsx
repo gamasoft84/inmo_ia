@@ -1,14 +1,35 @@
 "use client";
 
-import { Bell, Search } from "lucide-react";
+import { Bell, LogOut, Search } from "lucide-react";
+import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
+import { createClient } from "@/lib/supabase/client";
 
 type TopbarProps = {
   title: string;
 };
 
 export function Topbar({ title }: TopbarProps) {
+  const supabase = createClient();
+  const router = useRouter();
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
+
+  async function handleLogout() {
+    if (isLoggingOut) return;
+    setIsLoggingOut(true);
+
+    try {
+      await supabase.auth.signOut();
+      await fetch("/api/auth/logout", { method: "POST" });
+      router.replace("/login");
+      router.refresh();
+    } finally {
+      setIsLoggingOut(false);
+    }
+  }
+
   return (
     <header className="topbar">
       <div>
@@ -28,6 +49,9 @@ export function Topbar({ title }: TopbarProps) {
         </Button>
         <Button variant="ghost" size="sm" aria-label="Buscar">
           <Search size={14} />
+        </Button>
+        <Button variant="ghost" size="sm" aria-label="Cerrar sesion" onClick={handleLogout} disabled={isLoggingOut}>
+          <LogOut size={14} />
         </Button>
       </div>
     </header>

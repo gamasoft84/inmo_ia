@@ -35,6 +35,8 @@ export default function PublicPropertyPage() {
   const [loading, setLoading] = useState(true);
   const [activePhoto, setActivePhoto] = useState(0);
   const [similar, setSimilar] = useState<Row[]>([]);
+  const [agencyWa, setAgencyWa] = useState<string | null>(null);
+  const [agencyBotName, setAgencyBotName] = useState<string>("Sofía");
 
   useEffect(() => {
     let mounted = true;
@@ -75,6 +77,18 @@ export default function PublicPropertyPage() {
       if (!mounted) return;
       setProperty(data);
       setLoading(false);
+
+      if (data?.agency_id) {
+        const { data: agency } = await supabase
+          .from("agencies")
+          .select("whatsapp_number, bot_name")
+          .eq("id", data.agency_id as string)
+          .maybeSingle();
+        if (mounted && agency) {
+          setAgencyWa(agency.whatsapp_number as string | null);
+          setAgencyBotName((agency.bot_name as string | null) ?? "Sofía");
+        }
+      }
 
       if (data?.city) {
         const sim = await supabase
@@ -253,11 +267,50 @@ export default function PublicPropertyPage() {
         <aside className="space-y-3">
           {/* CTA */}
           <div className="rounded-[12px] border-[0.5px] border-border-tertiary bg-bg-primary p-4">
-            <h2 className="text-[13px] font-medium text-text-primary">¿Te interesa esta propiedad?</h2>
-            <p className="mt-1 text-[11px] text-text-tertiary">Sofía te responde en minutos por WhatsApp.</p>
+            <h2 className="text-[13px] font-medium text-text-primary">
+              {lang === "en" ? "Interested in this property?" : "¿Te interesa esta propiedad?"}
+            </h2>
+            <p className="mt-1 text-[11px] text-text-tertiary">
+              {lang === "en"
+                ? `${agencyBotName} replies in minutes via WhatsApp.`
+                : `${agencyBotName} te responde en minutos por WhatsApp.`}
+            </p>
             <div className="mt-3 space-y-2">
-              <Button variant="primary" full>📅 Agendar visita</Button>
-              <Button variant="whatsapp" full>💬 WhatsApp</Button>
+              {agencyWa ? (
+                <>
+                  <a
+                    href={`https://wa.me/${agencyWa.replace(/\D/g, "")}?text=${encodeURIComponent(
+                      lang === "en"
+                        ? `Hello ${agencyBotName}! I'd like to schedule a visit for: ${title}${city ? ` in ${city}` : ""}${price ? ` — ${price}` : ""}`
+                        : `Hola ${agencyBotName}! Me gustaría agendar una visita para: ${title}${city ? ` en ${city}` : ""}${price ? ` — ${price}` : ""}`
+                    )}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="btn btn-primary btn-full flex w-full items-center justify-center gap-2 rounded-[8px] py-2.5 text-[12px] font-medium text-white"
+                    style={{ background: "var(--color-brand)" }}
+                  >
+                    📅 {lang === "en" ? "Schedule a visit" : "Agendar visita"}
+                  </a>
+                  <a
+                    href={`https://wa.me/${agencyWa.replace(/\D/g, "")}?text=${encodeURIComponent(
+                      lang === "en"
+                        ? `Hello! I'm interested in: ${title}${city ? ` (${city})` : ""}${price ? ` — ${price}` : ""}. Could you give me more information?`
+                        : `Hola! Me interesa la propiedad: ${title}${city ? ` en ${city}` : ""}${price ? ` — ${price}` : ""}. ¿Me pueden dar más información?`
+                    )}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex w-full items-center justify-center gap-2 rounded-[8px] py-2.5 text-[12px] font-medium text-white"
+                    style={{ background: "#25D366" }}
+                  >
+                    💬 WhatsApp
+                  </a>
+                </>
+              ) : (
+                <>
+                  <Button variant="primary" full disabled>📅 {lang === "en" ? "Schedule a visit" : "Agendar visita"}</Button>
+                  <Button variant="whatsapp" full disabled>💬 WhatsApp</Button>
+                </>
+              )}
             </div>
           </div>
 

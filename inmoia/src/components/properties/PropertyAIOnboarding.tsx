@@ -25,7 +25,6 @@ const FINISH_LABELS: Record<string, string> = {
 
 export function PropertyAIOnboarding({ agencyId, onComplete }: Props) {
   const fileRef = useRef<HTMLInputElement>(null);
-  const supabase = createClient();
 
   const [state, setState] = useState<UploadState>("idle");
   const [progress, setProgress] = useState(0);
@@ -44,25 +43,24 @@ export function PropertyAIOnboarding({ agencyId, onComplete }: Props) {
 
     for (let i = 0; i < total; i++) {
       const file = files[i];
-      const ext = file.name.split(".").pop() ?? "jpg";
-      const path = `${agencyId}/${Date.now()}-${i}.${ext}`;
+      const fd = new FormData();
+      fd.append("file", file);
+      fd.append("agencyId", agencyId || "general");
 
-      const { data, error: uploadErr } = await supabase.storage
-        .from("property-photos")
-        .upload(path, file, { upsert: true });
+      const res = await fetch("/api/properties/upload-photo", {
+        method: "POST",
+        body: fd,
+      }).catch(() => null);
 
-      if (uploadErr || !data) continue;
+      if (!res?.ok) continue;
 
-      const { data: urlData } = supabase.storage
-        .from("property-photos")
-        .getPublicUrl(data.path);
-
-      if (urlData?.publicUrl) uploaded.push(urlData.publicUrl);
+      const data = await res.json().catch(() => null) as { url?: string } | null;
+      if (data?.url) uploaded.push(data.url);
       setProgress(10 + Math.round(((i + 1) / total) * 50));
     }
 
     if (uploaded.length === 0) {
-      setError("No se pudieron subir las fotos. Verifica el bucket de Supabase.");
+      setError("No se pudieron subir las fotos. Revisa la consola del servidor para más detalles.");
       setState("error");
       return;
     }

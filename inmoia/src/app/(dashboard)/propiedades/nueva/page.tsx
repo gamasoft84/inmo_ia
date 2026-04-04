@@ -149,7 +149,7 @@ export default function NuevaPropiedadPage() {
           price_mxn: form.price_mxn,
           area_total: form.area_total,
           bedrooms: form.bedrooms,
-          features: form.photos,
+          photos: form.photos,
           title_es: form.title_es,
           desc_es: form.desc_es,
           publish: form.publish,

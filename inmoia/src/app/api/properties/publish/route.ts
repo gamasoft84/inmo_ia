@@ -15,6 +15,17 @@ function slugify(value: string) {
     .replace(/[^a-z0-9-]/g, "");
 }
 
+/** Genera slug según spec: [tipo]-[ciudad]-[m2]m2-[4chars-id] */
+function buildSlug(type: string, city: string, area: number | null, id: string): string {
+  const parts = [
+    slugify(type || "propiedad"),
+    slugify(city || "mx"),
+    area && area > 0 ? `${area}m2` : null,
+    id.slice(0, 4),
+  ].filter(Boolean);
+  return parts.join("-");
+}
+
 function randomSuffix() {
   return Math.random().toString(36).slice(2, 7);
 }
@@ -24,10 +35,6 @@ function isSlugConflict(message?: string | null) {
   return normalized.includes("duplicate key") && normalized.includes("slug");
 }
 
-function isMissingSlugColumn(message?: string | null) {
-  const normalized = (message || "").toLowerCase();
-  return normalized.includes("column") && normalized.includes("slug") && normalized.includes("does not exist");
-}
 
 export async function POST(req: NextRequest) {
   // Cliente service role para bypass RLS en tabla users
@@ -35,7 +42,11 @@ export async function POST(req: NextRequest) {
 
   try {
     const body = await req.json();
-    const { userId, userEmail, type, operation, city, price_mxn, area_total, bedrooms, features, title_es, desc_es, publish } = body;
+    const { userId, userEmail, type, operation, city, price_mxn, area_total, bedrooms, photos: photosRaw, title_es, desc_es, publish } = body;
+    // Normaliza fotos: acepta string (URLs separadas por \n) o array
+    const photos = Array.isArray(photosRaw)
+      ? photosRaw.filter(Boolean)
+      : String(photosRaw ?? "").split("\n").map((s: string) => s.trim()).filter(Boolean);
 
     // Validación básica
     if (!userId || !userEmail) {
@@ -145,48 +156,53 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const slugBase = slugify(`${type}-${city}-${Date.now()}`);
+    const areaNum = Number(area_total || 0) || null;
+    // Slug temporal único para satisfacer NOT NULL + UNIQUE en el insert inicial
+    const tempSlug = `tmp-${Date.now()}-${randomSuffix()}`;
 
-    const payload = {
-      agency_id: userRow.agency_id,
-      type,
-      operation,
-      city,
-      status: publish ? "active" : "draft",
-      title_es,
-      desc_es,
-      price_mxn: Number(price_mxn || 0),
-      area_total: Number(area_total || 0),
-      bedrooms: Number(bedrooms || 0),
-      features,
-      slug: slugBase,
-    };
-
-    // Usa service role para insertar (bypass RLS)
-    const withSlug = await supabaseAdmin
+    const inserted = await supabaseAdmin
       .from("properties")
-      .insert(payload)
+      .insert({
+        agency_id: userRow.agency_id,
+        type,
+        operation,
+        city,
+        status: publish ? "active" : "draft",
+        title_es,
+        desc_es,
+        price_mxn: Number(price_mxn || 0),
+        area_total: areaNum,
+        bedrooms: Number(bedrooms || 0),
+        photos,
+        slug: tempSlug,
+      })
       .select("id")
       .single();
 
-    if (!withSlug.error && withSlug.data?.id) {
-      // Genera y guarda el embedding para búsqueda semántica del bot.
-      // Fire-and-forget: no bloquea la respuesta si falla.
+    if (!inserted.error && inserted.data?.id) {
+      const propertyId = String(inserted.data.id);
+      // Slug definitivo según spec: [tipo]-[ciudad]-[m2]m2-[4chars-id]
+      const slug = buildSlug(type, city, areaNum, propertyId);
+
+      // Actualiza al slug definitivo
+      await supabaseAdmin
+        .from("properties")
+        .update({ slug })
+        .eq("id", propertyId)
+        .then(() => {});
+
+      // Embedding fire-and-forget
       const embeddingText = [title_es, desc_es, city, type].filter(Boolean).join(" ");
       createEmbedding(embeddingText).then((vector) => {
         supabaseAdmin
           .from("properties")
           .update({ embedding: toPgVectorLiteral(vector) })
-          .eq("id", withSlug.data.id)
+          .eq("id", propertyId)
           .then(() => {});
       }).catch(() => {});
 
       return NextResponse.json(
-        {
-          success: true,
-          id: withSlug.data.id,
-          slug: slugBase,
-        },
+        { success: true, id: propertyId, slug },
         { status: 201 }
       );
     }
@@ -199,30 +215,20 @@ export async function POST(req: NextRequest) {
         title_es,
         city,
         status: publish ? "active" : "draft",
-        features,
+        photos,
       })
       .select("id")
       .single();
 
     if (fallback.error || !fallback.data?.id) {
       return NextResponse.json(
-        {
-          error:
-            withSlug.error?.message ??
-            fallback.error?.message ??
-            "No se pudo guardar la propiedad.",
-        },
+        { error: fallback.error?.message ?? "No se pudo guardar la propiedad." },
         { status: 400 }
       );
     }
 
     return NextResponse.json(
-      {
-        success: true,
-        id: fallback.data.id,
-        // Si no existe columna slug en schema legado, forzamos ruta publica por id.
-        slug: isMissingSlugColumn(withSlug.error?.message) ? null : slugBase,
-      },
+      { success: true, id: fallback.data.id, slug: null },
       { status: 201 }
     );
   } catch (cause) {

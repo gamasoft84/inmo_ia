@@ -27,12 +27,19 @@ export function BottomNav() {
             key={tab.href}
             href={tab.href}
             className={cn(
-              "inline-flex flex-col items-center justify-center gap-1 text-[9px] text-text-tertiary",
-              active && "text-brand-dark",
+              "relative inline-flex flex-col items-center justify-center gap-1 pt-1 text-[10px]",
+              active ? "text-brand-dark" : "text-text-tertiary",
             )}
           >
-            <Icon size={14} />
-            <span className="font-medium">{tab.label}</span>
+            {/* Barra indicadora superior */}
+            <span
+              className={cn(
+                "absolute top-0 h-[3px] w-8 rounded-full transition-all duration-200",
+                active ? "bg-brand" : "bg-transparent",
+              )}
+            />
+            <Icon size={20} strokeWidth={active ? 2.2 : 1.6} />
+            <span className={cn("font-medium", active && "font-semibold")}>{tab.label}</span>
           </Link>
         );
       })}

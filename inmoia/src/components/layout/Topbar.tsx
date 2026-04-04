@@ -1,11 +1,12 @@
 "use client";
 
-import { Bell, LogOut, Search } from "lucide-react";
+import { LogOut, Search } from "lucide-react";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { createClient } from "@/lib/supabase/client";
+import { NotificationBell } from "@/components/layout/NotificationBell";
 
 type TopbarProps = {
   title: string;
@@ -44,9 +45,7 @@ export function Topbar({ title }: TopbarProps) {
         <Button variant="brand-soft" size="sm" ai>
           Sugerir con IA
         </Button>
-        <Button variant="ghost" size="sm" aria-label="Notificaciones">
-          <Bell size={14} />
-        </Button>
+        <NotificationBell />
         <Button variant="ghost" size="sm" aria-label="Buscar">
           <Search size={14} />
         </Button>

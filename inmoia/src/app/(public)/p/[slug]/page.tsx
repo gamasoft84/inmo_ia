@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { useParams } from "next/navigation";
+import { useParams, useSearchParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/Button";
 import { SkeletonBlock, SkeletonLine } from "@/components/ui/Skeleton";
@@ -26,6 +26,8 @@ const TYPE_EMOJI: Record<string, string> = {
 export default function PublicPropertyPage() {
   const supabase = createClient();
   const params = useParams<{ slug: string }>();
+  const searchParams = useSearchParams();
+  const backUrl = searchParams.get("back");
   const slug = params?.slug ?? "";
 
   const [lang, setLang] = useState<"es" | "en">("es");
@@ -116,7 +118,7 @@ export default function PublicPropertyPage() {
   if (loading) {
     return (
       <main className="min-h-screen bg-bg-secondary">
-        <Nav lang={lang} onLang={setLang} />
+        <Nav lang={lang} onLang={setLang} backUrl={backUrl} />
         <div className="mx-auto max-w-6xl p-4">
           <SkeletonBlock className="mb-3 h-[300px] w-full" />
           <SkeletonLine className="mb-2 w-3/4" />
@@ -129,7 +131,7 @@ export default function PublicPropertyPage() {
   if (!property) {
     return (
       <main className="min-h-screen bg-bg-secondary">
-        <Nav lang={lang} onLang={setLang} />
+        <Nav lang={lang} onLang={setLang} backUrl={backUrl} />
         <div className="mx-auto max-w-6xl p-8 text-center">
           <p className="text-[36px]">🏚</p>
           <h1 className="mt-2 text-[18px] font-medium text-text-primary">Propiedad no encontrada</h1>
@@ -142,7 +144,7 @@ export default function PublicPropertyPage() {
 
   return (
     <main className="min-h-screen bg-bg-secondary">
-      <Nav lang={lang} onLang={setLang} />
+      <Nav lang={lang} onLang={setLang} backUrl={backUrl} />
 
       <div className="mx-auto grid max-w-6xl gap-4 p-4 lg:grid-cols-[1.4fr_1fr]">
         <article className="overflow-hidden rounded-[12px] border-[0.5px] border-border-tertiary bg-bg-primary">
@@ -302,10 +304,16 @@ export default function PublicPropertyPage() {
   );
 }
 
-function Nav({ lang, onLang }: { lang: "es" | "en"; onLang: (l: "es" | "en") => void }) {
+function Nav({ lang, onLang, backUrl }: { lang: "es" | "en"; onLang: (l: "es" | "en") => void; backUrl?: string | null }) {
   return (
     <nav className="flex items-center justify-between border-b-[0.5px] border-border-tertiary bg-bg-primary px-4 py-2">
-      <Link href="/" className="text-[13px] font-medium text-text-primary">🌊 InmoIA</Link>
+      {backUrl ? (
+        <Link href={backUrl} className="flex items-center gap-1 text-[12px] text-text-secondary hover:text-text-primary">
+          ← {lang === "en" ? "Back" : "Regresar"}
+        </Link>
+      ) : (
+        <Link href="/" className="text-[13px] font-medium text-text-primary">🌊 InmoIA</Link>
+      )}
       <div className="flex items-center gap-1">
         {(["es", "en"] as const).map((l) => (
           <button

@@ -21,6 +21,7 @@ type Property = {
 };
 
 type Agency = {
+  slug: string;
   name: string;
   brand_emoji: string | null;
   logo_url: string | null;
@@ -249,7 +250,7 @@ export function CatalogoCliente({ agency, properties }: { agency: Agency; proper
                   className="overflow-hidden rounded-[14px] bg-white shadow-sm transition hover:shadow-md"
                 >
                   {/* Photo */}
-                  <Link href={`/p/${p.slug}`} className="block">
+                  <Link href={`/p/${p.slug}?back=${encodeURIComponent(`/agencia/${agency.slug}`)}`} className="block">
                     {photo ? (
                       /* eslint-disable-next-line @next/next/no-img-element */
                       <img
@@ -283,7 +284,7 @@ export function CatalogoCliente({ agency, properties }: { agency: Agency; proper
                     </div>
 
                     {/* Title */}
-                    <Link href={`/p/${p.slug}`}>
+                    <Link href={`/p/${p.slug}?back=${encodeURIComponent(`/agencia/${agency.slug}`)}`}>
                       <h2 className="text-[14px] font-semibold leading-snug text-gray-800 hover:text-amber-700">
                         {title}
                       </h2>
@@ -313,7 +314,7 @@ export function CatalogoCliente({ agency, properties }: { agency: Agency; proper
                     {/* Actions */}
                     <div className="mt-3 flex gap-2">
                       <Link
-                        href={`/p/${p.slug}`}
+                        href={`/p/${p.slug}?back=${encodeURIComponent(`/agencia/${agency.slug}`)}`}
                         className="flex-1 rounded-[8px] py-2 text-center text-[12px] font-medium transition hover:opacity-80"
                         style={{ background: "#0F0F1A", color: "#fff" }}
                       >

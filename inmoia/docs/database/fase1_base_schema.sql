@@ -199,9 +199,11 @@ begin
     select 1 from pg_policies
     where schemaname = 'public' and tablename = 'users' and policyname = 'agency_isolation'
   ) then
+    -- NOTA: NO usar subquery a users desde users — causa recursión infinita.
+    -- Cada usuario solo ve su propio row; los compañeros de agencia se consultan con service role.
     create policy "agency_isolation"
       on public.users
-      using (agency_id = (select agency_id from public.users where id = auth.uid()));
+      using (id = auth.uid());
   end if;
 
   if not exists (

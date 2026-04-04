@@ -2,10 +2,12 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
+import { createClient } from '@/lib/supabase/client';
 
 type FormData = {
   nombre: string;
   email: string;
+  password: string;
   agencia: string;
   ciudad: string;
   tipoAgencia: string;
@@ -40,7 +42,7 @@ const STEPS = [
     leftTitle: 'Activa tu chatbot',
     leftHighlight: 'en menos de 3 minutos',
     leftDesc: 'Conecta tu número de WhatsApp Business y Sofía empieza a trabajar de inmediato.',
-    rightTitle: 'Tu número de WhatsApp',
+    rightTitle: 'Contraseña y WhatsApp',
   },
   {
     num: '05',
@@ -60,10 +62,12 @@ const PLANS = [
 const TIPOS = ['Agencia inmobiliaria', 'Agente independiente', 'Desarrolladora', 'Franquicia', 'Otro'];
 
 export default function RegistroPage() {
+  const supabase = createClient();
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
   const [form, setForm] = useState<FormData>({
-    nombre: '', email: '', agencia: '', ciudad: '', tipoAgencia: '', plan: '', whatsapp: '',
+    nombre: '', email: '', password: '', agencia: '', ciudad: '', tipoAgencia: '', plan: '', whatsapp: '',
   });
 
   function update(key: keyof FormData, value: string) {
@@ -73,9 +77,56 @@ export default function RegistroPage() {
   async function next() {
     if (step === 5) {
       setLoading(true);
-      // TODO: crear cuenta en Supabase
-      await new Promise(r => setTimeout(r, 1000));
-      window.location.href = '/dashboard';
+      setError('');
+
+      try {
+        const { data: authData, error: signUpError } = await supabase.auth.signUp({
+          email: form.email,
+          password: form.password,
+          options: {
+            emailRedirectTo: `${window.location.origin}/api/auth/callback`,
+          },
+        });
+
+        if (signUpError) {
+          setError(signUpError.message);
+          setLoading(false);
+          return;
+        }
+
+        if (!authData.user?.id) {
+          setError('No se pudo crear la sesión.');
+          setLoading(false);
+          return;
+        }
+
+        // Insertar agencia y usuario via API route (usa service_role, bypasea RLS)
+        const res = await fetch('/api/auth/register', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            userId: authData.user.id,
+            nombre: form.nombre,
+            email: form.email,
+            agencia: form.agencia,
+            ciudad: form.ciudad,
+            whatsapp: form.whatsapp,
+          }),
+        });
+
+        const json = await res.json();
+        if (!res.ok) {
+          setError(json.error ?? 'Error en el registro');
+          setLoading(false);
+          return;
+        }
+
+        window.location.href = '/dashboard';
+      } catch (cause) {
+        const message = cause instanceof Error ? cause.message : 'Error inesperado';
+        setError(message);
+        setLoading(false);
+      }
       return;
     }
     setStep(s => s + 1);
@@ -86,7 +137,7 @@ export default function RegistroPage() {
     1: !!form.nombre && !!form.email,
     2: !!form.agencia && !!form.ciudad,
     3: !!form.plan,
-    4: form.whatsapp.length >= 10,
+    4: form.password.length >= 8 && form.whatsapp.length >= 10,
     5: true,
   };
 
@@ -102,6 +153,7 @@ export default function RegistroPage() {
 
   return (
     <div style={{ minHeight: '100vh', background: '#0F0F1A', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '24px', fontFamily: 'var(--font-sans)' }}>
+      <style>{`@keyframes fadeInStep { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }`}</style>
       <div style={{ width: '100%', maxWidth: '780px', borderRadius: '16px', overflow: 'hidden', boxShadow: '0 24px 80px rgba(0,0,0,0.5)', display: 'flex', minHeight: '480px' }}>
 
         {/* LEFT PANEL */}
@@ -143,11 +195,27 @@ export default function RegistroPage() {
             {step === 1 && <div style={{ fontSize: '12px', color: '#9090A8' }}>Ya tienes cuenta? <Link href="/login" style={{ color: 'var(--brand)', textDecoration: 'none' }}>Inicia sesión</Link></div>}
           </div>
 
+          {error && (
+            <div
+              style={{
+                marginBottom: '12px',
+                border: '0.5px solid #F7C1C1',
+                background: '#FCEBEB',
+                color: '#A32D2D',
+                borderRadius: '8px',
+                padding: '8px 10px',
+                fontSize: '11px',
+              }}
+            >
+              {error}
+            </div>
+          )}
+
           <div style={{ flex: 1 }}>
 
             {/* STEP 1 — Cuenta */}
             {step === 1 && (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', animation: 'fadeInStep 0.25s ease both' }}>
                 <div>
                   <label style={labelStyle}>NOMBRE COMPLETO</label>
                   <input style={inputStyle} placeholder="Luis Aguilar" value={form.nombre} onChange={e => update('nombre', e.target.value)} onFocus={e => (e.target.style.borderColor = 'var(--brand)')} onBlur={e => (e.target.style.borderColor = '#D4D0C8')} />
@@ -161,7 +229,7 @@ export default function RegistroPage() {
 
             {/* STEP 2 — Agencia */}
             {step === 2 && (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', animation: 'fadeInStep 0.25s ease both' }}>
                 <div>
                   <label style={labelStyle}>NOMBRE DE TU AGENCIA</label>
                   <input style={inputStyle} placeholder="Agencia Aguilar" value={form.agencia} onChange={e => update('agencia', e.target.value)} onFocus={e => (e.target.style.borderColor = 'var(--brand)')} onBlur={e => (e.target.style.borderColor = '#D4D0C8')} />
@@ -182,7 +250,7 @@ export default function RegistroPage() {
 
             {/* STEP 3 — Plan */}
             {step === 3 && (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', animation: 'fadeInStep 0.25s ease both' }}>
                 {PLANS.map(p => (
                   <div
                     key={p.id}
@@ -204,9 +272,13 @@ export default function RegistroPage() {
               </div>
             )}
 
-            {/* STEP 4 — WhatsApp */}
+            {/* STEP 4 — Contraseña + WhatsApp */}
             {step === 4 && (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', animation: 'fadeInStep 0.25s ease both' }}>
+                <div>
+                  <label style={labelStyle}>CONTRASEÑA</label>
+                  <input type="password" style={inputStyle} placeholder="Mínimo 8 caracteres" value={form.password} onChange={e => update('password', e.target.value)} onFocus={e => (e.target.style.borderColor = 'var(--brand)')} onBlur={e => (e.target.style.borderColor = '#D4D0C8')} />
+                </div>
                 <div>
                   <label style={labelStyle}>NÚMERO DE WHATSAPP BUSINESS</label>
                   <div style={{ display: 'flex', gap: '8px' }}>
@@ -230,7 +302,7 @@ export default function RegistroPage() {
 
             {/* STEP 5 — Listo */}
             {step === 5 && (
-              <div style={{ textAlign: 'center', paddingTop: '8px' }}>
+              <div style={{ textAlign: 'center', paddingTop: '8px', animation: 'fadeInStep 0.25s ease both' }}>
                 <div style={{ fontSize: '48px', marginBottom: '16px' }}>🎉</div>
                 <div style={{ fontSize: '15px', fontWeight: 500, color: '#1A1A2E', marginBottom: '8px' }}>¡Bienvenido a InmoIA, {form.nombre.split(' ')[0]}!</div>
                 <div style={{ fontSize: '12px', color: '#9090A8', lineHeight: 1.7, marginBottom: '20px' }}>

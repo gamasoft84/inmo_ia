@@ -8,8 +8,20 @@ begin;
 create extension if not exists pgcrypto;
 create extension if not exists vector;
 
--- 2) Agencies: bot config columns used by API/UI
+-- 2) Agencies: columnas faltantes (plan, status, trial_ends_at, etc.)
 alter table if exists public.agencies
+  add column if not exists slug text,
+  add column if not exists plan text default 'trial',
+  add column if not exists status text default 'trial',
+  add column if not exists trial_ends_at timestamptz,
+  add column if not exists logo_url text,
+  add column if not exists brand_emoji text default '🏡',
+  add column if not exists brand_color text default 'amber',
+  add column if not exists dark_mode boolean default false,
+  add column if not exists stripe_customer_id text,
+  add column if not exists stripe_subscription_id text,
+  add column if not exists languages text[] default array['es']::text[],
+  add column if not exists timezone text default 'America/Mexico_City',
   add column if not exists bot_name text default 'Sofia',
   add column if not exists bot_greeting_es text,
   add column if not exists bot_greeting_en text,
@@ -17,6 +29,15 @@ alter table if exists public.agencies
   add column if not exists bot_context text,
   add column if not exists whatsapp_number text,
   add column if not exists updated_at timestamptz default now();
+
+-- Unique constraint en slug (solo si no existe)
+do $$ begin
+  if not exists (
+    select 1 from pg_constraint where conname = 'agencies_slug_key'
+  ) then
+    alter table public.agencies add constraint agencies_slug_key unique (slug);
+  end if;
+end $$;
 
 -- 3) Fallback table used when agencies does not include bot columns
 create table if not exists public.chatbot_configs (
@@ -151,5 +172,102 @@ alter table if exists public.leads enable row level security;
 alter table if exists public.conversations enable row level security;
 alter table if exists public.properties enable row level security;
 alter table if exists public.chatbot_configs enable row level security;
+
+-- 10) Fix: política users con recursión infinita
+-- La policy original hace SELECT FROM users dentro de users → recursión.
+-- Reemplazar con: el usuario solo ve sus propios registros y los de su agencia.
+do $$
+begin
+  -- Eliminar la policy recursiva si existe
+  drop policy if exists "agency_isolation" on public.users;
+
+  -- Nueva policy sin recursión: cada usuario ve solo su propio row
+  if not exists (
+    select 1 from pg_policies
+    where schemaname = 'public' and tablename = 'users' and policyname = 'users_own_row'
+  ) then
+    create policy "users_own_row"
+      on public.users
+      using (id = auth.uid());
+  end if;
+
+  -- INSERT policy en users: el usuario puede insertar su propio row
+  if not exists (
+    select 1 from pg_policies
+    where schemaname = 'public' and tablename = 'users' and policyname = 'users_insert_own'
+  ) then
+    create policy "users_insert_own"
+      on public.users
+      for insert
+      with check (id = auth.uid());
+  end if;
+end $$;
+
+-- 11) INSERT policies para agencies, leads, conversations, properties
+do $$
+begin
+  -- agencies: cualquier usuario autenticado puede crear una agencia (registro)
+  if not exists (
+    select 1 from pg_policies
+    where schemaname = 'public' and tablename = 'agencies' and policyname = 'agencies_insert_auth'
+  ) then
+    create policy "agencies_insert_auth"
+      on public.agencies
+      for insert
+      with check (auth.uid() is not null);
+  end if;
+
+  -- agencies SELECT: el usuario ve la agencia a la que pertenece
+  -- (sin subquery recursivo — usa join seguro)
+  drop policy if exists "agency_isolation" on public.agencies;
+  drop policy if exists "super_admin_bypass" on public.agencies;
+
+  if not exists (
+    select 1 from pg_policies
+    where schemaname = 'public' and tablename = 'agencies' and policyname = 'agencies_select_own'
+  ) then
+    create policy "agencies_select_own"
+      on public.agencies
+      for select
+      using (
+        id in (
+          select agency_id from public.users where id = auth.uid()
+        )
+      );
+  end if;
+
+  -- leads INSERT
+  if not exists (
+    select 1 from pg_policies
+    where schemaname = 'public' and tablename = 'leads' and policyname = 'leads_insert_auth'
+  ) then
+    create policy "leads_insert_auth"
+      on public.leads
+      for insert
+      with check (auth.uid() is not null);
+  end if;
+
+  -- conversations INSERT
+  if not exists (
+    select 1 from pg_policies
+    where schemaname = 'public' and tablename = 'conversations' and policyname = 'conversations_insert_auth'
+  ) then
+    create policy "conversations_insert_auth"
+      on public.conversations
+      for insert
+      with check (auth.uid() is not null);
+  end if;
+
+  -- properties INSERT
+  if not exists (
+    select 1 from pg_policies
+    where schemaname = 'public' and tablename = 'properties' and policyname = 'properties_insert_auth'
+  ) then
+    create policy "properties_insert_auth"
+      on public.properties
+      for insert
+      with check (auth.uid() is not null);
+  end if;
+end $$;
 
 commit;

@@ -2,6 +2,7 @@
 
 import { useState, useRef } from 'react';
 import Link from 'next/link';
+import { createClient } from '@/lib/supabase/client';
 
 type Step = 1 | 2 | 3;
 
@@ -29,6 +30,7 @@ function StrengthBar({ password }: { password: string }) {
 }
 
 export default function RecuperarPasswordPage() {
+  const supabase = createClient();
   const [step, setStep] = useState<Step>(1);
   const [email, setEmail] = useState('');
   const [code, setCode] = useState<string[]>(['', '', '', '', '', '']);
@@ -36,6 +38,7 @@ export default function RecuperarPasswordPage() {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [done, setDone] = useState(false);
+  const [error, setError] = useState('');
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
 
   const inputStyle: React.CSSProperties = {
@@ -46,9 +49,14 @@ export default function RecuperarPasswordPage() {
   async function handleStep1(e: React.FormEvent) {
     e.preventDefault();
     setLoading(true);
-    // TODO: await supabase.auth.resetPasswordForEmail(email)
-    await new Promise(r => setTimeout(r, 800));
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: `${window.location.origin}/api/auth/callback?next=/recuperar-password`,
+    });
     setLoading(false);
+    if (error) {
+      setError(error.message);
+      return;
+    }
     setStep(2);
   }
 
@@ -56,9 +64,16 @@ export default function RecuperarPasswordPage() {
     const fullCode = code.join('');
     if (fullCode.length < 6) return;
     setLoading(true);
-    // TODO: verificar OTP con Supabase
-    await new Promise(r => setTimeout(r, 700));
+    const { error } = await supabase.auth.verifyOtp({
+      email,
+      token: fullCode,
+      type: 'recovery',
+    });
     setLoading(false);
+    if (error) {
+      setError(error.message);
+      return;
+    }
     setStep(3);
   }
 
@@ -66,9 +81,12 @@ export default function RecuperarPasswordPage() {
     e.preventDefault();
     if (password !== confirmPassword || password.length < 8) return;
     setLoading(true);
-    // TODO: await supabase.auth.updateUser({ password })
-    await new Promise(r => setTimeout(r, 800));
+    const { error } = await supabase.auth.updateUser({ password });
     setLoading(false);
+    if (error) {
+      setError(error.message);
+      return;
+    }
     setDone(true);
   }
 
@@ -109,6 +127,12 @@ export default function RecuperarPasswordPage() {
                 {i < 2 && <div style={{ flex: 1, height: '1px', background: s < step ? '#C0DD97' : '#E0DDD8' }} />}
               </div>
             ))}
+          </div>
+        )}
+
+        {error && (
+          <div style={{ marginBottom: '12px', border: '0.5px solid #F7C1C1', background: '#FCEBEB', color: '#A32D2D', borderRadius: '8px', padding: '8px 10px', fontSize: '11px' }}>
+            {error}
           </div>
         )}
 

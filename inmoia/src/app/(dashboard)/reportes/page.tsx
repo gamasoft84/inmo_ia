@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { PageWrapper } from "@/components/layout/PageWrapper";
-import { scoreToTemperature, LEAD_TEMP_META, LEAD_STATUS_LABEL, type LeadStatus } from "@/types/lead";
+import { scoreToTemperature, LEAD_STATUS_LABEL, type LeadStatus } from "@/types/lead";
 
 type ReportTab = "leads" | "propiedades" | "chatbot" | "roi";
 

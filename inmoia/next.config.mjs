@@ -7,6 +7,11 @@ const withPWA = withPWAInit({
 
 const nextConfig = {
   reactStrictMode: true,
+  experimental: {
+    serverActions: {
+      bodySizeLimit: "10mb",
+    },
+  },
 };
 
 export default withPWA(nextConfig);

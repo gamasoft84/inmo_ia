@@ -1,3 +1,4 @@
+import { createEmbedding, toPgVectorLiteral } from "@/lib/ai/embeddings";
 import { createServiceClient } from "@/lib/supabase/server";
 import { NextRequest, NextResponse } from "next/server";
 
@@ -169,6 +170,17 @@ export async function POST(req: NextRequest) {
       .single();
 
     if (!withSlug.error && withSlug.data?.id) {
+      // Genera y guarda el embedding para búsqueda semántica del bot.
+      // Fire-and-forget: no bloquea la respuesta si falla.
+      const embeddingText = [title_es, desc_es, city, type].filter(Boolean).join(" ");
+      createEmbedding(embeddingText).then((vector) => {
+        supabaseAdmin
+          .from("properties")
+          .update({ embedding: toPgVectorLiteral(vector) })
+          .eq("id", withSlug.data.id)
+          .then(() => {});
+      }).catch(() => {});
+
       return NextResponse.json(
         {
           success: true,

@@ -1,10 +1,11 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { PageWrapper } from "@/components/layout/PageWrapper";
 import { Button } from "@/components/ui/Button";
 import { Steps } from "@/components/ui/Steps";
+import { PropertyAIOnboarding, type AIOnboardingResult } from "@/components/properties/PropertyAIOnboarding";
 
 const steps = [
   { id: "datos", label: "Datos" },
@@ -19,6 +20,17 @@ export default function NuevaPropiedadPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [ok, setOk] = useState("");
+  const [agencyId, setAgencyId] = useState("");
+
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data }) => {
+      const uid = data.user?.id;
+      if (!uid) return;
+      supabase.from("users").select("agency_id").eq("id", uid).single().then(({ data: row }) => {
+        if (row?.agency_id) setAgencyId(String(row.agency_id));
+      });
+    });
+  }, [supabase]);
 
   const [form, setForm] = useState({
     type: "casa",
@@ -37,6 +49,21 @@ export default function NuevaPropiedadPage() {
 
   function update(key: keyof typeof form, value: string | boolean) {
     setForm((prev) => ({ ...prev, [key]: value }));
+  }
+
+  function handleAIOnboarding(result: AIOnboardingResult) {
+    setForm((prev) => ({
+      ...prev,
+      type:      result.type || prev.type,
+      bedrooms:  result.bedrooms ? String(result.bedrooms) : prev.bedrooms,
+      area_total: prev.area_total,
+      photos:    result.photoUrls.join("\n"),
+      title_es:  result.title_es || prev.title_es,
+      desc_es:   result.desc_es  || prev.desc_es,
+      price_mxn: result.estimated_price_min ? String(result.estimated_price_min) : prev.price_mxn,
+    }));
+    setOk("✦ Claude Vision completó el formulario. Revisa y ajusta los datos.");
+    setCurrent("datos");
   }
 
   const canNext = useMemo(() => {
@@ -281,37 +308,11 @@ export default function NuevaPropiedadPage() {
           </div>
         </section>
 
-        <section className="rounded-[12px] border-[0.5px] border-border-tertiary bg-bg-secondary p-3">
-          <div className="mb-2 flex items-center justify-between">
-            <h2 className="text-[12px] font-medium text-text-primary">✦ Claude analiza tus fotos</h2>
-            <span className="badge-ai">✦ Claude Vision</span>
-          </div>
-
-          <div className="mb-3 grid grid-cols-4 gap-2">
-            <div className="relative aspect-[4/3] rounded-[8px] bg-gradient-to-br from-[#8B7355] to-[#C4A882] text-center text-[20px] leading-[60px]">🏡</div>
-            <div className="relative aspect-[4/3] rounded-[8px] bg-gradient-to-br from-[#4a6fa5] to-[#7aa7d4] text-center text-[20px] leading-[60px]">🛋️</div>
-            <div className="relative aspect-[4/3] rounded-[8px] bg-gradient-to-br from-[#228B22] to-[#90EE90] text-center text-[20px] leading-[60px]">🌿</div>
-            <div className="relative aspect-[4/3] rounded-[8px] bg-gradient-to-br from-[#C0C0C0] to-[#E8E8E8] text-center text-[20px] leading-[60px]">🍳</div>
-          </div>
-
-          <div className="space-y-2">
-            <div className="flex items-center justify-between border-b-[0.5px] border-border-tertiary pb-2 text-[11px]">
-              <span className="text-text-tertiary">Tipo detectado</span>
-              <span className="font-medium text-text-primary">Casa residencial <span className="ml-1 rounded-full bg-success-light px-1.5 py-[1px] text-[8px] text-success">97%</span></span>
-            </div>
-            <div className="flex items-center justify-between border-b-[0.5px] border-border-tertiary pb-2 text-[11px]">
-              <span className="text-text-tertiary">Acabados</span>
-              <span className="font-medium text-text-primary">Premium <span className="ml-1 rounded-full bg-success-light px-1.5 py-[1px] text-[8px] text-success">89%</span></span>
-            </div>
-            <div className="flex items-center justify-between text-[11px]">
-              <span className="text-text-tertiary">Precio estimado</span>
-              <span className="font-medium text-brand-dark">$5.5M–$6.5M</span>
-            </div>
-          </div>
-
-          <p className="mt-3 text-[10px] leading-relaxed text-text-tertiary">
-            Flujo: subes 3-5 fotos, Claude pre-llena campos y genera 4 versiones de descripcion en segundos.
-          </p>
+        <section>
+          <PropertyAIOnboarding
+            agencyId={agencyId}
+            onComplete={handleAIOnboarding}
+          />
         </section>
       </div>
     </PageWrapper>

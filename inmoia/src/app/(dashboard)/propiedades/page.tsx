@@ -117,23 +117,29 @@ export default function PropiedadesPage() {
 
         <div className="grid gap-3 p-3 md:grid-cols-2 xl:grid-cols-3">
           {filtered.map((property) => (
-            <Link
-              key={property.id}
-                href={`/p/${property.slug}`}
-              className="overflow-hidden rounded-[12px] border-[0.5px] border-border-tertiary bg-bg-primary"
-            >
-              <div className="relative flex h-28 items-center justify-center bg-gradient-to-br from-[#8B7355] to-[#C4A882] text-[34px]">
-                {property.emoji}
+            <div key={property.id} className="overflow-hidden rounded-[12px] border-[0.5px] border-border-tertiary bg-bg-primary">
+              <Link href={`/p/${property.slug}`}>
+                <div className="relative flex h-28 items-center justify-center bg-gradient-to-br from-[#8B7355] to-[#C4A882] text-[34px]">
+                  {property.emoji}
                   <span className={`absolute right-2 top-2 rounded-full px-2 py-[2px] text-[8px] font-semibold ${statusClasses[property.status] ?? "bg-bg-secondary text-text-tertiary"}`}>
-                  {property.status.toUpperCase()}
-                </span>
-              </div>
-              <div className="space-y-1 p-3">
-                <p className="text-[12px] font-medium text-text-primary">{property.title}</p>
+                    {property.status.toUpperCase()}
+                  </span>
+                </div>
+                <div className="space-y-1 p-3">
+                  <p className="text-[12px] font-medium text-text-primary">{property.title}</p>
                   <p className="text-[16px] font-medium text-brand-dark">{property.priceLabel}</p>
                   <p className="text-[10px] text-text-tertiary">{property.city}</p>
+                </div>
+              </Link>
+              <div className="flex items-center gap-2 border-t-[0.5px] border-border-tertiary px-3 py-2">
+                <Link href={`/propiedades/${property.id}/editar`} className="btn btn-ghost btn-sm flex-1 justify-center">
+                  Editar
+                </Link>
+                <Link href={`/p/${property.slug}`} target="_blank" className="btn btn-ghost btn-sm flex-1 justify-center">
+                  Ver pública
+                </Link>
               </div>
-            </Link>
+            </div>
           ))}
             {filtered.length === 0 ? (
               <div className="rounded-[12px] border-[0.5px] border-border-tertiary p-4 text-[11px] text-text-tertiary">

@@ -1,4 +1,4 @@
-import { createMockEmbedding, toPgVectorLiteral } from "@/lib/ai/embeddings";
+import { createEmbedding, toPgVectorLiteral } from "@/lib/ai/embeddings";
 import { createAdminClient } from "@/lib/supabase/admin";
 
 type PropertyMatch = {
@@ -53,7 +53,7 @@ export async function findTopPropertyMatches(input: MatchPropertiesInput): Promi
     };
   }
 
-  const queryEmbedding = createMockEmbedding(input.query);
+  const queryEmbedding = await createEmbedding(input.query);
   const vectorLiteral = toPgVectorLiteral(queryEmbedding);
 
   const result = await supabase.rpc("match_properties", {

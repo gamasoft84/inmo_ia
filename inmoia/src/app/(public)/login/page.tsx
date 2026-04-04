@@ -1,19 +1,89 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
+import { createClient } from '@/lib/supabase/client';
+
+function normalizeAuthError(message: string) {
+  if (message.includes('Unsupported provider')) {
+    return 'Google OAuth no está habilitado en Supabase. Activa el proveedor Google en Authentication > Providers y configura su Client ID/Secret.';
+  }
+
+  if (message.includes('No auth payload')) {
+    return 'No se recibió la respuesta de autenticación. Intenta iniciar sesión nuevamente.';
+  }
+
+  return message;
+}
 
 export default function LoginPage() {
+  const supabase = createClient();
   const [email, setEmail] = useState('');
   const [sent, setSent] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+
+  useEffect(() => {
+    const urlError = new URLSearchParams(window.location.search).get('error');
+    if (urlError) {
+      setError(normalizeAuthError(urlError));
+    }
+  }, []);
+
+  async function handleGoogleLogin() {
+    setError('');
+    setLoading(true);
+
+    try {
+      const nextPath = new URLSearchParams(window.location.search).get('next') || '/dashboard';
+      const redirectTo = `${window.location.origin}/api/auth/callback?next=${encodeURIComponent(nextPath)}`;
+      const { data, error: oauthError } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo,
+          skipBrowserRedirect: true,
+        },
+      });
+
+      if (oauthError) {
+        setError(normalizeAuthError(oauthError.message));
+        setLoading(false);
+        return;
+      }
+
+      if (!data?.url) {
+        setError('No fue posible iniciar Google OAuth. Verifica la configuración del proveedor en Supabase e intenta nuevamente.');
+        setLoading(false);
+        return;
+      }
+
+      window.location.assign(data.url);
+    } catch (cause) {
+      const message = cause instanceof Error ? cause.message : 'Ocurrió un error inesperado al iniciar sesión con Google.';
+      setError(normalizeAuthError(message));
+      setLoading(false);
+    }
+  }
 
   async function handleMagicLink(e: React.FormEvent) {
     e.preventDefault();
     if (!email) return;
+    setError('');
     setLoading(true);
-    // TODO: await supabase.auth.signInWithOtp({ email })
-    await new Promise(r => setTimeout(r, 800));
+
+    const nextPath = new URLSearchParams(window.location.search).get('next') || '/dashboard';
+    const emailRedirectTo = `${window.location.origin}/api/auth/callback?next=${encodeURIComponent(nextPath)}`;
+    const { error: otpError } = await supabase.auth.signInWithOtp({
+      email,
+      options: { emailRedirectTo },
+    });
+
+    if (otpError) {
+      setError(normalizeAuthError(otpError.message));
+      setLoading(false);
+      return;
+    }
+
     setLoading(false);
     setSent(true);
   }
@@ -55,21 +125,33 @@ export default function LoginPage() {
 
             {/* Social auth */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '20px' }}>
-              {[
-                { emoji: '🔴', label: 'Continuar con Google', bg: '#fff', color: '#4A4A6A' },
-                { emoji: '🟢', label: 'Continuar con WhatsApp', bg: '#fff', color: '#4A4A6A' },
-              ].map(btn => (
-                <button
-                  key={btn.label}
-                  style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '10px 14px', border: '0.5px solid #D4D0C8', borderRadius: '8px', background: btn.bg, color: btn.color, fontSize: '13px', cursor: 'pointer', width: '100%', transition: 'background 200ms' }}
-                  onMouseEnter={e => (e.currentTarget.style.background = '#F7F6F3')}
-                  onMouseLeave={e => (e.currentTarget.style.background = btn.bg)}
-                >
-                  <span style={{ fontSize: '16px' }}>{btn.emoji}</span>
-                  {btn.label}
-                </button>
-              ))}
+              <button
+                type="button"
+                onClick={handleGoogleLogin}
+                disabled={loading}
+                style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '10px 14px', border: '0.5px solid #D4D0C8', borderRadius: '8px', background: '#fff', color: '#4A4A6A', fontSize: '13px', cursor: loading ? 'not-allowed' : 'pointer', width: '100%', transition: 'background 200ms', opacity: loading ? 0.7 : 1 }}
+                onMouseEnter={e => (e.currentTarget.style.background = '#F7F6F3')}
+                onMouseLeave={e => (e.currentTarget.style.background = '#fff')}
+              >
+                <span style={{ fontSize: '16px' }}>🔴</span>
+                {loading ? 'Conectando con Google...' : 'Continuar con Google'}
+              </button>
+
+              <button
+                type="button"
+                disabled
+                style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '10px 14px', border: '0.5px solid #D4D0C8', borderRadius: '8px', background: '#fff', color: '#9090A8', fontSize: '13px', cursor: 'not-allowed', width: '100%' }}
+              >
+                <span style={{ fontSize: '16px' }}>🟢</span>
+                WhatsApp OTP (próximamente)
+              </button>
             </div>
+
+            {error ? (
+              <div style={{ marginBottom: '12px', border: '0.5px solid #F7C1C1', background: '#FCEBEB', color: '#A32D2D', borderRadius: '8px', padding: '8px 10px', fontSize: '11px' }}>
+                {error}
+              </div>
+            ) : null}
 
             {/* Divider */}
             <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '20px' }}>
